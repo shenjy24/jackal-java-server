@@ -1,11 +1,9 @@
-package com.tech.repository.manager.auth;
+package com.tech.repository.dao.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tech.repository.entity.auth.AuthRolePermissionEntity;
-import com.tech.repository.entity.auth.AuthUserRoleEntity;
 import com.tech.repository.mapper.auth.AuthRolePermissionMapper;
-import com.tech.repository.mapper.auth.AuthUserRoleMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +18,7 @@ import java.util.Set;
  * @since 2026-05-23
  */
 @Service
-public class AuthRolePermissionManager extends ServiceImpl<AuthRolePermissionMapper, AuthRolePermissionEntity> {
+public class AuthRolePermissionDao extends ServiceImpl<AuthRolePermissionMapper, AuthRolePermissionEntity> {
     public List<AuthRolePermissionEntity> listAuthRolePermission(Set<Long> roleIds) {
         if (CollectionUtils.isEmpty(roleIds)) {
             return Collections.emptyList();

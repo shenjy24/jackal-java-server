@@ -1,4 +1,4 @@
-package com.tech.repository.manager.auth;
+package com.tech.repository.dao.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -18,7 +18,7 @@ import java.util.Set;
  * @since 2026-05-23
  */
 @Service
-public class AuthRoleManager extends ServiceImpl<AuthRoleMapper, AuthRoleEntity> {
+public class AuthRoleDao extends ServiceImpl<AuthRoleMapper, AuthRoleEntity> {
     public List<AuthRoleEntity> listAuthRole(Set<Long> roleIds) {
         if (CollectionUtils.isEmpty(roleIds)) {
             return Collections.emptyList();

@@ -1,4 +1,4 @@
-package com.tech.repository.manager.auth;
+package com.tech.repository.dao.auth;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tech.repository.entity.auth.AuthPermissionEntity;
@@ -17,7 +17,7 @@ import java.util.Set;
  * @since 2026-05-23
  */
 @Service
-public class AuthPermissionManager extends ServiceImpl<AuthPermissionMapper, AuthPermissionEntity> {
+public class AuthPermissionDao extends ServiceImpl<AuthPermissionMapper, AuthPermissionEntity> {
     public List<AuthPermissionEntity> listAuthPermission(Set<Long> permIds) {
         if (CollectionUtils.isEmpty(permIds)) {
             return Collections.emptyList();

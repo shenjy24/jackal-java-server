@@ -1,4 +1,4 @@
-package com.tech.repository.manager.user;
+package com.tech.repository.dao.user;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tech.repository.entity.user.UserEntity;
@@ -12,5 +12,5 @@ import org.springframework.stereotype.Service;
  * @since 2026-05-23
  */
 @Service
-public class UserManager extends ServiceImpl<UserMapper, UserEntity> {
+public class UserDao extends ServiceImpl<UserMapper, UserEntity> {
 }

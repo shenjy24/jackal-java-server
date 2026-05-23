@@ -2,9 +2,9 @@ package com.tech.service.user;
 
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.entity.user.UserTokenEntity;
-import com.tech.repository.manager.user.UserAccountManager;
-import com.tech.repository.manager.user.UserManager;
-import com.tech.repository.manager.user.UserTokenManager;
+import com.tech.repository.dao.user.UserAccountDao;
+import com.tech.repository.dao.user.UserDao;
+import com.tech.repository.dao.user.UserTokenDao;
 import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,23 +24,23 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserQueryService {
 
-    private final UserManager userManager;
-    private final UserTokenManager userTokenManager;
-    private final UserAccountManager userAccountManager;
+    private final UserDao userDao;
+    private final UserTokenDao userTokenDao;
+    private final UserAccountDao userAccountDao;
 
     @Cacheable("userCache")
     public UserEntity getUser(Long userId) {
         if (userId == null) {
             return null;
         }
-        return userManager.getById(userId);
+        return userDao.getById(userId);
     }
 
     public UserTokenEntity getUserTokenByToken(String token) {
         if (StringUtils.isBlank(token)) {
             return null;
         }
-        return userTokenManager.getUserToken(token);
+        return userTokenDao.getUserToken(token);
     }
 
     /**

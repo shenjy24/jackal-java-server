@@ -1,4 +1,4 @@
-package com.tech.repository.vo.user;
+package com.tech.model.vo.user;
 
 import lombok.Data;
 

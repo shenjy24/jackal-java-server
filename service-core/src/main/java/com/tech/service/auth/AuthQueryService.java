@@ -5,10 +5,10 @@ import com.tech.repository.entity.auth.AuthPermissionEntity;
 import com.tech.repository.entity.auth.AuthRoleEntity;
 import com.tech.repository.entity.auth.AuthRolePermissionEntity;
 import com.tech.repository.entity.auth.AuthUserRoleEntity;
-import com.tech.repository.manager.auth.AuthPermissionManager;
-import com.tech.repository.manager.auth.AuthRoleManager;
-import com.tech.repository.manager.auth.AuthRolePermissionManager;
-import com.tech.repository.manager.auth.AuthUserRoleManager;
+import com.tech.repository.dao.auth.AuthPermissionDao;
+import com.tech.repository.dao.auth.AuthRoleDao;
+import com.tech.repository.dao.auth.AuthRolePermissionDao;
+import com.tech.repository.dao.auth.AuthUserRoleDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -31,10 +31,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthQueryService {
 
-    private final AuthRoleManager authRoleManager;
-    private final AuthUserRoleManager authUserRoleManager;
-    private final AuthPermissionManager authPermissionManager;
-    private final AuthRolePermissionManager authRolePermissionManager;
+    private final AuthRoleDao authRoleDao;
+    private final AuthUserRoleDao authUserRoleDao;
+    private final AuthPermissionDao authPermissionDao;
+    private final AuthRolePermissionDao authRolePermissionDao;
 
     /**
      * 查询用户的权限编码集合
@@ -44,17 +44,17 @@ public class AuthQueryService {
         if (userId == null) {
             return codes;
         }
-        List<AuthUserRoleEntity> userRoles = authUserRoleManager.listAuthUserRole(userId);
+        List<AuthUserRoleEntity> userRoles = authUserRoleDao.listAuthUserRole(userId);
         if (CollectionUtils.isEmpty(userRoles)) {
             return codes;
         }
         Set<Long> roleIds = userRoles.stream().map(AuthUserRoleEntity::getRoleId).collect(Collectors.toSet());
-        List<AuthRoleEntity> roles = authRoleManager.listAuthRole(roleIds);
+        List<AuthRoleEntity> roles = authRoleDao.listAuthRole(roleIds);
         if (CollectionUtils.isEmpty(roles)) {
             return codes;
         }
         roleIds = roles.stream().map(AuthRoleEntity::getRoleId).collect(Collectors.toSet());
-        List<AuthRolePermissionEntity> rolePerms = authRolePermissionManager.listAuthRolePermission(roleIds);
+        List<AuthRolePermissionEntity> rolePerms = authRolePermissionDao.listAuthRolePermission(roleIds);
         if (CollectionUtils.isEmpty(rolePerms)) {
             return codes;
         }
@@ -62,7 +62,7 @@ public class AuthQueryService {
         if (permIds.isEmpty()) {
             return codes;
         }
-        List<AuthPermissionEntity> perms = authPermissionManager.listAuthPermission(permIds);
+        List<AuthPermissionEntity> perms = authPermissionDao.listAuthPermission(permIds);
         if (permType == null) {
             return perms.stream().map(AuthPermissionEntity::getCode).collect(Collectors.toSet());
         }

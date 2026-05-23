@@ -1,4 +1,4 @@
-package com.tech.repository.manager.user;
+package com.tech.repository.dao.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @since 2026-05-23
  */
 @Service
-public class UserTokenManager extends ServiceImpl<UserTokenMapper, UserTokenEntity> {
+public class UserTokenDao extends ServiceImpl<UserTokenMapper, UserTokenEntity> {
     public UserTokenEntity getUserToken(Long userId) {
         if (userId == null) {
             return null;

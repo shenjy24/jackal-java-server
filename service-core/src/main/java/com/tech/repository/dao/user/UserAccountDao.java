@@ -1,4 +1,4 @@
-package com.tech.repository.manager.user;
+package com.tech.repository.dao.user;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @since 2026-05-23
  */
 @Service
-public class UserAccountManager extends ServiceImpl<UserAccountMapper, UserAccountEntity> {
+public class UserAccountDao extends ServiceImpl<UserAccountMapper, UserAccountEntity> {
     public UserAccountEntity getUserAccount(String account) {
         if (StringUtils.isEmpty(account)) {
             return null;

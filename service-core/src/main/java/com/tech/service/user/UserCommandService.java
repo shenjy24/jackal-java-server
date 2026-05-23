@@ -5,9 +5,9 @@ import com.tech.config.response.bean.BizException;
 import com.tech.repository.entity.user.UserAccountEntity;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.entity.user.UserTokenEntity;
-import com.tech.repository.manager.user.UserAccountManager;
-import com.tech.repository.manager.user.UserManager;
-import com.tech.repository.manager.user.UserTokenManager;
+import com.tech.repository.dao.user.UserAccountDao;
+import com.tech.repository.dao.user.UserDao;
+import com.tech.repository.dao.user.UserTokenDao;
 import com.tech.util.CookieUtil;
 import com.tech.util.IdUtil;
 import com.tech.util.MD5Util;
@@ -30,9 +30,9 @@ import java.sql.Timestamp;
 @RequiredArgsConstructor
 public class UserCommandService {
 
-    private final UserManager userManager;
-    private final UserTokenManager userTokenManager;
-    private final UserAccountManager userAccountManager;
+    private final UserDao userDao;
+    private final UserTokenDao userTokenDao;
+    private final UserAccountDao userAccountDao;
 
     /**
      * 账号密码登陆
@@ -42,14 +42,14 @@ public class UserCommandService {
      * @return 用户ID
      */
     public UserEntity loginByAccount(String account, String password) {
-        UserAccountEntity userAccount = userAccountManager.getUserAccount(account);
+        UserAccountEntity userAccount = userAccountDao.getUserAccount(account);
         if (userAccount == null) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
         if (!MD5Util.verifySaltMd5(password, userAccount.getPassword())) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
-        UserEntity user = userManager.getById(userAccount.getUserId());
+        UserEntity user = userDao.getById(userAccount.getUserId());
         if (user == null) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
@@ -65,15 +65,15 @@ public class UserCommandService {
         if (userId == null) {
             throw new BizException(ErrorCode.PARAM_ERROR);
         }
-        UserTokenEntity userToken = userTokenManager.getUserToken(userId);
+        UserTokenEntity userToken = userTokenDao.getUserToken(userId);
         String token = IdUtil.uuid();
         Timestamp expireTime = TimeUtil.getTokenExpireTime();
         if (null == userToken) {
             userToken = new UserTokenEntity().setUserId(userId).setToken(token).setExpireTime(expireTime);
-            userTokenManager.save(userToken);
+            userTokenDao.save(userToken);
         } else {
             userToken.setToken(token).setExpireTime(expireTime);
-            userTokenManager.updateById(userToken);
+            userTokenDao.updateById(userToken);
         }
         return userToken;
     }
@@ -82,6 +82,6 @@ public class UserCommandService {
         if (userToken == null || userToken.getTokenId() == null) {
             return;
         }
-        userTokenManager.updateById(userToken);
+        userTokenDao.updateById(userToken);
     }
 }

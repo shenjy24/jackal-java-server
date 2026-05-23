@@ -1,4 +1,4 @@
-package com.tech.repository.manager.auth;
+package com.tech.repository.dao.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -16,7 +16,7 @@ import java.util.List;
  * @since 2026-05-23
  */
 @Service
-public class AuthUserRoleManager extends ServiceImpl<AuthUserRoleMapper, AuthUserRoleEntity> {
+public class AuthUserRoleDao extends ServiceImpl<AuthUserRoleMapper, AuthUserRoleEntity> {
 
     public List<AuthUserRoleEntity> listAuthUserRole(Long userId) {
         if (userId == null) {
