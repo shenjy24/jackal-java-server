@@ -6,7 +6,6 @@ import com.tech.common.enums.auth.PermType;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
 import com.tech.service.auth.AuthQueryService;
-import com.tech.service.user.UserQueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private final UserQueryService userQueryService;
     private final AuthQueryService authQueryService;
 
     @Override

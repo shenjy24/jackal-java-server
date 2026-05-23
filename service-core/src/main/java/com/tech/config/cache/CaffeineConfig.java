@@ -17,7 +17,7 @@ import java.time.Duration;
  *
  * @author Jonas
  * @version 1.0
- * @date 2025-09-28
+ * @since 2025-09-28
  */
 @Slf4j
 @EnableCaching

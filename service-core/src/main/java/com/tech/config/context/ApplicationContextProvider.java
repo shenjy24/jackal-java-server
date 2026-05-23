@@ -1,4 +1,4 @@
-package com.tech.component;
+package com.tech.config.context;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
