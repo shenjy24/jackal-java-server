@@ -1,0 +1,27 @@
+package com.tech.repository.manager.auth;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tech.repository.entity.auth.AuthPermissionEntity;
+import com.tech.repository.mapper.auth.AuthPermissionMapper;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * AuthPermission DAO
+ *
+ * @author Jonas
+ * @since 2026-05-23
+ */
+@Service
+public class AuthPermissionManager extends ServiceImpl<AuthPermissionMapper, AuthPermissionEntity> {
+    public List<AuthPermissionEntity> listAuthPermission(Set<Long> permIds) {
+        if (CollectionUtils.isEmpty(permIds)) {
+            return Collections.emptyList();
+        }
+        return listByIds(permIds);
+    }
+}

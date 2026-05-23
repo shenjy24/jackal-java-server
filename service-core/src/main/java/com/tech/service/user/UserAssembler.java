@@ -1,6 +1,5 @@
 package com.tech.service.user;
 
-import com.tech.domain.UserDomain;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.vo.user.UserVo;
 import lombok.RequiredArgsConstructor;
@@ -11,15 +10,13 @@ import org.springframework.stereotype.Service;
  * UserAggregator
  *
  * @author Jonas
- * @date 2025-06-19
  * @version 1.0
+ * @since 2025-06-19
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserAggregator {
-
-    private final UserDomain userDomain;
+public class UserAssembler {
 
     public UserVo toUserVo(UserEntity user) {
         if (user == null) {

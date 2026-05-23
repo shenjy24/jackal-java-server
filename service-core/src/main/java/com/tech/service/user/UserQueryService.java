@@ -1,8 +1,10 @@
 package com.tech.service.user;
 
-import com.tech.domain.UserDomain;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.entity.user.UserTokenEntity;
+import com.tech.repository.manager.user.UserAccountManager;
+import com.tech.repository.manager.user.UserManager;
+import com.tech.repository.manager.user.UserTokenManager;
 import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,29 +17,30 @@ import org.springframework.stereotype.Service;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-02-12
+ * @since 2025-02-12
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserSeeker {
+public class UserQueryService {
 
-    private final UserDomain userDomain;
+    private final UserManager userManager;
+    private final UserTokenManager userTokenManager;
+    private final UserAccountManager userAccountManager;
 
     @Cacheable("userCache")
     public UserEntity getUser(Long userId) {
         if (userId == null) {
             return null;
         }
-        log.info("查询用户, userId:{}", userId);
-        return userDomain.getUser(userId);
+        return userManager.getById(userId);
     }
 
     public UserTokenEntity getUserTokenByToken(String token) {
         if (StringUtils.isBlank(token)) {
             return null;
         }
-        return userDomain.getUserToken(token);
+        return userTokenManager.getUserToken(token);
     }
 
     /**

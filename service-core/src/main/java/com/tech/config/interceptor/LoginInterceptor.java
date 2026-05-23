@@ -6,8 +6,8 @@ import com.tech.common.constant.Constants;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
 import com.tech.repository.entity.user.UserTokenEntity;
-import com.tech.service.user.UserSeeker;
-import com.tech.service.user.UserService;
+import com.tech.service.user.UserQueryService;
+import com.tech.service.user.UserCommandService;
 import com.tech.util.CookieUtil;
 import com.tech.util.TimeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,8 +33,8 @@ import java.lang.annotation.Annotation;
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
 
-    private final UserSeeker userSeeker;
-    private final UserService userService;
+    private final UserQueryService userQueryService;
+    private final UserCommandService userCommandService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -57,8 +57,8 @@ public class LoginInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        UserTokenEntity userToken = userSeeker.getUserTokenByToken(token);
-        if (userSeeker.isExpiredToken(userToken)) {
+        UserTokenEntity userToken = userQueryService.getUserTokenByToken(token);
+        if (userQueryService.isExpiredToken(userToken)) {
             if (semiAnonymous) {
                 return true;
             }
@@ -70,7 +70,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         long expireTime = userToken.getExpireTime().getTime();
         if (expireTime - currentTime < Constants.TOKEN_REFRESH_MS) {
             userToken.setExpireTime(TimeUtil.getTokenExpireTime());
-            userService.updateUserToken(userToken);
+            userCommandService.updateUserToken(userToken);
         }
 
         request.setAttribute(Constants.REQ_ATT_USER, userToken.getUserId());

@@ -33,7 +33,7 @@ public class OkHttpUtil {
     private static final MediaType MEDIA_STREAM = MediaType.get("application/octet-stream; charset=utf-8");
 
     static {
-        // 配置自定义线程池，可以记录traceId
+        // 配置自定义线程池
         taskExecutor = (ThreadPoolTaskExecutor) ApplicationContextProvider.getApplicationContext().getBean("okHttpExecutor");
         client = new OkHttpClient().newBuilder()
                 .dispatcher(new Dispatcher(taskExecutor.getThreadPoolExecutor()))

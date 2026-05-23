@@ -2,10 +2,12 @@ package com.tech.service.user;
 
 import com.tech.common.enums.ErrorCode;
 import com.tech.config.response.bean.BizException;
-import com.tech.domain.UserDomain;
 import com.tech.repository.entity.user.UserAccountEntity;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.entity.user.UserTokenEntity;
+import com.tech.repository.manager.user.UserAccountManager;
+import com.tech.repository.manager.user.UserManager;
+import com.tech.repository.manager.user.UserTokenManager;
 import com.tech.util.CookieUtil;
 import com.tech.util.IdUtil;
 import com.tech.util.MD5Util;
@@ -21,13 +23,16 @@ import java.sql.Timestamp;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-02-13
+ * @since 2025-02-13
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
-    private final UserDomain userDomain;
+public class UserCommandService {
+
+    private final UserManager userManager;
+    private final UserTokenManager userTokenManager;
+    private final UserAccountManager userAccountManager;
 
     /**
      * 账号密码登陆
@@ -37,14 +42,14 @@ public class UserService {
      * @return 用户ID
      */
     public UserEntity loginByAccount(String account, String password) {
-        UserAccountEntity userAccount = userDomain.getUserAccount(account);
+        UserAccountEntity userAccount = userAccountManager.getUserAccount(account);
         if (userAccount == null) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
         if (!MD5Util.verifySaltMd5(password, userAccount.getPassword())) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
-        UserEntity user = userDomain.getUser(userAccount.getUserId());
+        UserEntity user = userManager.getById(userAccount.getUserId());
         if (user == null) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
@@ -60,15 +65,15 @@ public class UserService {
         if (userId == null) {
             throw new BizException(ErrorCode.PARAM_ERROR);
         }
-        UserTokenEntity userToken = userDomain.getUserToken(userId);
+        UserTokenEntity userToken = userTokenManager.getUserToken(userId);
         String token = IdUtil.uuid();
         Timestamp expireTime = TimeUtil.getTokenExpireTime();
         if (null == userToken) {
             userToken = new UserTokenEntity().setUserId(userId).setToken(token).setExpireTime(expireTime);
-            userDomain.saveUserToken(userToken);
+            userTokenManager.save(userToken);
         } else {
             userToken.setToken(token).setExpireTime(expireTime);
-            userDomain.updateUserToken(userToken);
+            userTokenManager.updateById(userToken);
         }
         return userToken;
     }
@@ -77,6 +82,6 @@ public class UserService {
         if (userToken == null || userToken.getTokenId() == null) {
             return;
         }
-        userDomain.updateUserToken(userToken);
+        userTokenManager.updateById(userToken);
     }
 }

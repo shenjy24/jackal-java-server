@@ -7,10 +7,12 @@ import okhttp3.Response;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-06
+ * @since 2025-01-06
  */
 public interface SseListener {
     void onEvent(String event, String data);
+
     void onError(Exception e);
+
     void onFail(Response response);
 }

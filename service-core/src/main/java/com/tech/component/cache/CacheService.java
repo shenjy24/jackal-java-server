@@ -1,4 +1,4 @@
-package com.tech.service.cache;
+package com.tech.component.cache;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

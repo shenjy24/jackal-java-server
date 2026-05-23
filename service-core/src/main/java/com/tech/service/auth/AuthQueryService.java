@@ -1,11 +1,14 @@
 package com.tech.service.auth;
 
 import com.tech.common.enums.auth.PermType;
-import com.tech.domain.AuthDomain;
 import com.tech.repository.entity.auth.AuthPermissionEntity;
 import com.tech.repository.entity.auth.AuthRoleEntity;
 import com.tech.repository.entity.auth.AuthRolePermissionEntity;
 import com.tech.repository.entity.auth.AuthUserRoleEntity;
+import com.tech.repository.manager.auth.AuthPermissionManager;
+import com.tech.repository.manager.auth.AuthRoleManager;
+import com.tech.repository.manager.auth.AuthRolePermissionManager;
+import com.tech.repository.manager.auth.AuthUserRoleManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -20,15 +23,18 @@ import java.util.stream.Collectors;
  * 权限查询类
  *
  * @author Jonas
- * @date 2025-08-09
  * @version 1.0
+ * @since 2025-08-09
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthSeeker {
+public class AuthQueryService {
 
-    private final AuthDomain authDomain;
+    private final AuthRoleManager authRoleManager;
+    private final AuthUserRoleManager authUserRoleManager;
+    private final AuthPermissionManager authPermissionManager;
+    private final AuthRolePermissionManager authRolePermissionManager;
 
     /**
      * 查询用户的权限编码集合
@@ -38,17 +44,17 @@ public class AuthSeeker {
         if (userId == null) {
             return codes;
         }
-        List<AuthUserRoleEntity> userRoles = authDomain.listAuthUserRole(userId);
+        List<AuthUserRoleEntity> userRoles = authUserRoleManager.listAuthUserRole(userId);
         if (CollectionUtils.isEmpty(userRoles)) {
             return codes;
         }
         Set<Long> roleIds = userRoles.stream().map(AuthUserRoleEntity::getRoleId).collect(Collectors.toSet());
-        List<AuthRoleEntity> roles = authDomain.listAuthRole(roleIds);
+        List<AuthRoleEntity> roles = authRoleManager.listAuthRole(roleIds);
         if (CollectionUtils.isEmpty(roles)) {
             return codes;
         }
         roleIds = roles.stream().map(AuthRoleEntity::getRoleId).collect(Collectors.toSet());
-        List<AuthRolePermissionEntity> rolePerms = authDomain.listAuthRolePermission(roleIds);
+        List<AuthRolePermissionEntity> rolePerms = authRolePermissionManager.listAuthRolePermission(roleIds);
         if (CollectionUtils.isEmpty(rolePerms)) {
             return codes;
         }
@@ -56,7 +62,7 @@ public class AuthSeeker {
         if (permIds.isEmpty()) {
             return codes;
         }
-        List<AuthPermissionEntity> perms = authDomain.listAuthPermission(permIds);
+        List<AuthPermissionEntity> perms = authPermissionManager.listAuthPermission(permIds);
         if (permType == null) {
             return perms.stream().map(AuthPermissionEntity::getCode).collect(Collectors.toSet());
         }

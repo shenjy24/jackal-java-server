@@ -5,9 +5,9 @@ import com.tech.common.annotation.auth.UserId;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.repository.qo.user.LoginAccountQo;
 import com.tech.repository.vo.user.UserVo;
-import com.tech.service.user.UserAggregator;
-import com.tech.service.user.UserSeeker;
-import com.tech.service.user.UserService;
+import com.tech.service.user.UserAssembler;
+import com.tech.service.user.UserQueryService;
+import com.tech.service.user.UserCommandService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/web/user")
 public class UserController {
 
-    private final UserSeeker userSeeker;
-    private final UserService userService;
-    private final UserAggregator userAggregator;
+    private final UserQueryService userQueryService;
+    private final UserCommandService userCommandService;
+    private final UserAssembler userAssembler;
 
     /**
      * 账号密码登陆
@@ -42,8 +42,8 @@ public class UserController {
     @Anonymous
     @PostMapping("/loginByAccount")
     public UserVo loginByAccount(@Valid @RequestBody LoginAccountQo qo) {
-        UserEntity user = userService.loginByAccount(qo.getAccount(), qo.getPassword());
-        return userAggregator.toUserVo(user);
+        UserEntity user = userCommandService.loginByAccount(qo.getAccount(), qo.getPassword());
+        return userAssembler.toUserVo(user);
     }
 
     /**
@@ -55,8 +55,8 @@ public class UserController {
 //    @Permission(Perms.USER_GET)
     @PostMapping("/getUser")
     public UserVo getUser(@UserId Long userId) {
-        UserEntity user = userSeeker.getUser(userId);
-        return userAggregator.toUserVo(user);
+        UserEntity user = userQueryService.getUser(userId);
+        return userAssembler.toUserVo(user);
     }
 
 }
