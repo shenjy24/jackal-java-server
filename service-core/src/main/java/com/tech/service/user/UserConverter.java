@@ -6,17 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-/**
- * UserAggregator
- *
- * @author Jonas
- * @version 1.0
- * @since 2025-06-19
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserAssembler {
+public class UserConverter {
 
     public UserVo toUserVo(UserEntity user) {
         if (user == null) {

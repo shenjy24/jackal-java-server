@@ -5,7 +5,7 @@ import com.tech.common.annotation.auth.UserId;
 import com.tech.repository.entity.user.UserEntity;
 import com.tech.model.qo.user.LoginAccountQo;
 import com.tech.model.vo.user.UserVo;
-import com.tech.service.user.UserAssembler;
+import com.tech.service.user.UserConverter;
 import com.tech.service.user.UserReader;
 import com.tech.service.user.UserWriter;
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class UserController {
 
     private final UserReader userReader;
     private final UserWriter userWriter;
-    private final UserAssembler userAssembler;
+    private final UserConverter userConverter;
 
     /**
      * 账号密码登陆
@@ -43,7 +43,7 @@ public class UserController {
     @PostMapping("/loginByAccount")
     public UserVo loginByAccount(@Valid @RequestBody LoginAccountQo qo) {
         UserEntity user = userWriter.loginByAccount(qo.getAccount(), qo.getPassword());
-        return userAssembler.toUserVo(user);
+        return userConverter.toUserVo(user);
     }
 
     /**
@@ -55,7 +55,7 @@ public class UserController {
     @PostMapping("/getUser")
     public UserVo getUser(@UserId Long userId) {
         UserEntity user = userReader.getUser(userId);
-        return userAssembler.toUserVo(user);
+        return userConverter.toUserVo(user);
     }
 
 }
