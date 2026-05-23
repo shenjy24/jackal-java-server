@@ -6,8 +6,8 @@ import com.tech.common.constant.Constants;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
 import com.tech.repository.entity.auth.AdminUserTokenEntity;
-import com.tech.service.auth.AdminUserReader;
-import com.tech.service.auth.AdminUserWriter;
+import com.tech.service.auth.AuthReader;
+import com.tech.service.auth.AuthWriter;
 import com.tech.util.CookieUtil;
 import com.tech.util.TimeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +26,8 @@ import java.lang.annotation.Annotation;
 @RequiredArgsConstructor
 public class AdminLoginInterceptor implements HandlerInterceptor {
 
-    private final AdminUserReader adminUserReader;
-    private final AdminUserWriter adminUserWriter;
+    private final AuthReader authReader;
+    private final AuthWriter authWriter;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -45,8 +45,8 @@ public class AdminLoginInterceptor implements HandlerInterceptor {
         if (semiAnonymous && StringUtils.isBlank(token)) {
             return true;
         }
-        AdminUserTokenEntity adminToken = adminUserReader.getTokenByToken(token);
-        if (adminUserReader.isExpiredToken(adminToken)) {
+        AdminUserTokenEntity adminToken = authReader.getTokenByToken(token);
+        if (authReader.isExpiredToken(adminToken)) {
             if (semiAnonymous) {
                 return true;
             }
@@ -56,9 +56,9 @@ public class AdminLoginInterceptor implements HandlerInterceptor {
         long expireTime = adminToken.getExpireTime().getTime();
         if (expireTime - currentTime < Constants.TOKEN_REFRESH_MS) {
             adminToken.setExpireTime(TimeUtil.getTokenExpireTime());
-            adminUserWriter.updateToken(adminToken);
+            authWriter.updateToken(adminToken);
         }
-        request.setAttribute(Constants.REQ_ATT_USER, adminToken.getAdminUserId());
+        request.setAttribute(Constants.REQ_ATT_USER, adminToken.getUserId());
         return true;
     }
 

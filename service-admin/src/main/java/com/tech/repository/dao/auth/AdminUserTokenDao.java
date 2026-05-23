@@ -13,7 +13,7 @@ public class AdminUserTokenDao extends ServiceImpl<AdminUserTokenMapper, AdminUs
         if (adminUserId == null) {
             return null;
         }
-        return getOne(new LambdaQueryWrapper<AdminUserTokenEntity>().eq(AdminUserTokenEntity::getAdminUserId, adminUserId));
+        return getOne(new LambdaQueryWrapper<AdminUserTokenEntity>().eq(AdminUserTokenEntity::getUserId, adminUserId));
     }
 
     public AdminUserTokenEntity getByToken(String token) {

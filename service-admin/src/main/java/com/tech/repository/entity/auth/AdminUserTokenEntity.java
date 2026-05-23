@@ -15,12 +15,12 @@ import java.sql.Timestamp;
 public class AdminUserTokenEntity extends BaseEntity {
     @TableId(value = "token_id", type = IdType.ASSIGN_ID)
     private Long tokenId;
-    private Long adminUserId;
+    private Long userId;
     private String token;
     private Timestamp expireTime;
 
-    public AdminUserTokenEntity(Long adminUserId, String token, Timestamp expireTime) {
-        this.adminUserId = adminUserId;
+    public AdminUserTokenEntity(Long userId, String token, Timestamp expireTime) {
+        this.userId = userId;
         this.token = token;
         this.expireTime = expireTime;
     }

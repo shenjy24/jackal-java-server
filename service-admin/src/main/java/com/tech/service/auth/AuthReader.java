@@ -1,17 +1,13 @@
 package com.tech.service.auth;
 
 import com.tech.common.enums.auth.PermType;
-import com.tech.repository.entity.auth.AuthPermissionEntity;
-import com.tech.repository.entity.auth.AuthRoleEntity;
-import com.tech.repository.entity.auth.AuthRolePermissionEntity;
-import com.tech.repository.entity.auth.AuthUserRoleEntity;
-import com.tech.repository.dao.auth.AuthPermissionDao;
-import com.tech.repository.dao.auth.AuthRoleDao;
-import com.tech.repository.dao.auth.AuthRolePermissionDao;
-import com.tech.repository.dao.auth.AuthUserRoleDao;
+import com.tech.repository.dao.auth.*;
+import com.tech.repository.entity.auth.*;
+import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -28,6 +24,22 @@ public class AuthReader {
     private final AuthUserRoleDao authUserRoleDao;
     private final AuthPermissionDao authPermissionDao;
     private final AuthRolePermissionDao authRolePermissionDao;
+    private final AdminUserDao adminUserDao;
+    private final AdminUserTokenDao adminUserTokenDao;
+
+    public AdminUserTokenEntity getTokenByToken(String token) {
+        if (StringUtils.isBlank(token)) {
+            return null;
+        }
+        return adminUserTokenDao.getByToken(token);
+    }
+
+    public boolean isExpiredToken(AdminUserTokenEntity token) {
+        if (token == null || token.getExpireTime() == null) {
+            return true;
+        }
+        return TimeUtil.currentTimestamp().compareTo(token.getExpireTime()) > 0;
+    }
 
     public Set<String> listUserPermission(Long userId, PermType permType) {
         Set<String> codes = new HashSet<>();

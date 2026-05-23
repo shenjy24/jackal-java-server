@@ -19,7 +19,7 @@ import java.sql.Timestamp;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdminUserWriter {
+public class AuthWriter {
 
     private final AdminUserDao adminUserDao;
     private final AdminUserTokenDao adminUserTokenDao;
@@ -29,7 +29,7 @@ public class AdminUserWriter {
         if (adminUser == null || !MD5Util.verifySaltMd5(password, adminUser.getPassword())) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
-        AdminUserTokenEntity token = saveOrUpdateToken(adminUser.getAdminUserId());
+        AdminUserTokenEntity token = saveOrUpdateToken(adminUser.getUserId());
         CookieUtil.setCookie(token.getToken());
         return adminUser;
     }
