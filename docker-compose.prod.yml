@@ -1,0 +1,20 @@
+services:
+  service-client:
+    image: service-client:prod
+    container_name: service-client-prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - /home/jia/workspace/multi/multi-prod/service-client-logs:/app/logs
+    ports:
+      - "18881:8080"
+
+  service-admin:
+    image: service-admin:prod
+    container_name: service-admin-prod
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - /home/jia/workspace/multi/multi-prod/service-admin-logs:/app/logs
+    ports:
+      - "18882:8080"

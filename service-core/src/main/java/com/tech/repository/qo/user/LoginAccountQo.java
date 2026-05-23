@@ -1,0 +1,20 @@
+package com.tech.repository.qo.user;
+
+import com.tech.common.constant.ErrorMsg;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+/**
+ * 账号密码登录参数
+ *
+ * @author Jonas
+ * @date 2025-08-01
+ * @version 1.0
+ */
+@Data
+public class LoginAccountQo {
+    @NotBlank(message = ErrorMsg.PARAM_ERROR)
+    private String account;
+    @NotBlank(message = ErrorMsg.PARAM_ERROR)
+    private String password;
+}

@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  domain: ""
+spring:
+  application:
+    name: "jackal-java-server"
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  datasource:
+    url: jdbc:mysql://172.17.0.1:3306/jdd?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Hongkong&allowPublicKeyRetrieval=true
+    username: jdd
+    password: "******"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 连接池大小配置
+      minimum-idle: 5                    # 最小空闲连接数
+      maximum-pool-size: 10              # 最大连接池大小
+      # 连接生命周期配置
+      connection-timeout: 30000          # 连接超时时间(毫秒)
+      idle-timeout: 600000               # 空闲连接超时时间(毫秒)
+      max-lifetime: 1800000              # 连接最大生命周期(毫秒)
+      # 连接验证配置
+      connection-test-query: SELECT 1    # 连接测试查询
+      validation-timeout: 5000           # 验证超时时间(毫秒)
+      # 连接池行为配置
+      leak-detection-threshold: 60000    # 连接泄漏检测阈值(毫秒)
+      auto-commit: true                  # 自动提交
+      # 连接池名称(便于监控)
+      pool-name: "ProjectServerHikariCP"
+      # 连接初始化配置
+      initialization-fail-timeout: 1     # 初始化失败超时(秒)
+      connection-init-sql: SET NAMES utf8mb4  # 连接初始化SQL
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+aliyun:
+  accessKeyId: "******"
+  accessKeySecret: "******"
+  ossUrl: "https://%s.oss-cn-hangzhou.aliyuncs.com/"
+  ossEndpoint: "https://oss-cn-hangzhou.aliyuncs.com"
+  ossRegion: "cn-hangzhou"
+  ossBucket: "ielts-local"
