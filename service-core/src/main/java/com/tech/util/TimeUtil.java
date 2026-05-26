@@ -31,6 +31,13 @@ public class TimeUtil {
         return formatter.format(dateTime);
     }
 
+    public static String getImpactStringFromStamp(Long stamp) {
+        LocalDateTime dateTime = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(stamp),
+                ZoneId.systemDefault());
+        return getImpactStringFromDateTime(dateTime);
+    }
+
     public static String getStringFromDate(LocalDate date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(FORMAT_YYYY_MM_DD);
         return formatter.format(date);
