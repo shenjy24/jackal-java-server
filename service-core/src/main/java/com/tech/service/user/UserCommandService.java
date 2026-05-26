@@ -2,15 +2,15 @@ package com.tech.service.user;
 
 import com.tech.common.enums.ErrorCode;
 import com.tech.config.response.bean.BizException;
-import com.tech.repository.entity.user.UserAccountEntity;
-import com.tech.repository.entity.user.UserEntity;
-import com.tech.repository.entity.user.UserTokenEntity;
 import com.tech.repository.dao.user.UserAccountDao;
 import com.tech.repository.dao.user.UserDao;
 import com.tech.repository.dao.user.UserTokenDao;
+import com.tech.repository.entity.user.UserAccountEntity;
+import com.tech.repository.entity.user.UserEntity;
+import com.tech.repository.entity.user.UserTokenEntity;
 import com.tech.util.CookieUtil;
-import com.tech.util.IdUtil;
 import com.tech.util.CryptoUtil;
+import com.tech.util.IdUtil;
 import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class UserCommandService {
         }
         UserTokenEntity userToken = userTokenDao.getUserToken(userId);
         String token = IdUtil.uuid();
-        Timestamp expireTime = TimeUtil.getTokenExpireTime();
+        Timestamp expireTime = TimeUtil.tokenExpireTime();
         if (null == userToken) {
             userToken = new UserTokenEntity().setUserId(userId).setToken(token).setExpireTime(expireTime);
             userTokenDao.save(userToken);

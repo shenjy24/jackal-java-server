@@ -1,6 +1,5 @@
 package com.tech.util;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -92,7 +91,7 @@ public class SerialGenerator {
 
     private String buildSerial(String prefix, long timestamp, int seq) {
         // LocalDateTime 避免 SimpleDateFormat 线程安全问题
-        String ts = TimeUtil.getImpactStringFromStamp(timestamp);
+        String ts = TimeUtil.formatCompact(timestamp);
         // 序列号补零对齐，保证总长度固定
         String seqStr = String.format("%0" + SEQUENCE_LENGTH + "d", seq);
         return prefix + ts + seqStr;
