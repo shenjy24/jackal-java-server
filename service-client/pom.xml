@@ -8,12 +8,11 @@
     <parent>
         <groupId>com.tech</groupId>
         <artifactId>jackal-java-server</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>service-client</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
 
     <name>service-client</name>
     <description>C端服务</description>
