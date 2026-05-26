@@ -18,11 +18,18 @@ public class TimeUtil {
     public static final String FORMAT_YYYY_MM_DD = "yyyy-MM-dd";
     public static final String FORMAT_YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
     public static final String FORMAT_ZERO_ZONE = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    public static final String FORMAT_IMPACT = "yyMMddHHmmssSSS";
+
     public static final Integer MINUTE_SECOND = 60;
     public static final Integer HOUR_SECOND = 60 * 60;
     public static final Integer DAY_SECOND = HOUR_SECOND * 24;
     public static final Integer MONTH_SECOND = DAY_SECOND * 30;
     public static final Integer YEAR_SECOND = MONTH_SECOND * 12;
+
+    public static String getImpactStringFromDateTime(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(FORMAT_IMPACT);
+        return formatter.format(dateTime);
+    }
 
     public static String getStringFromDate(LocalDate date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(FORMAT_YYYY_MM_DD);
@@ -180,5 +187,10 @@ public class TimeUtil {
         LocalTime nextTime = LocalTime.of(23, 59, 59);
         LocalDateTime nextDateTime = LocalDateTime.of(nextDate, nextTime);
         return new Timestamp(nextDateTime.toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+    }
+
+    public static void main(String[] args) {
+        String time = TimeUtil.getImpactStringFromDateTime(LocalDateTime.now());
+        System.out.println(time);
     }
 }
