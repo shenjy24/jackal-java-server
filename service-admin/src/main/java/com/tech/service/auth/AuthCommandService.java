@@ -19,7 +19,7 @@ import java.sql.Timestamp;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthWriter {
+public class AuthCommandService {
 
     private final AdminUserDao adminUserDao;
     private final AdminUserTokenDao adminUserTokenDao;

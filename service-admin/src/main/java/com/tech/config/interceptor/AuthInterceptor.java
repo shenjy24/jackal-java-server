@@ -5,7 +5,7 @@ import com.tech.common.constant.Constants;
 import com.tech.common.enums.auth.PermType;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
-import com.tech.service.auth.AuthReader;
+import com.tech.service.auth.AuthQueryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private final AuthReader authReader;
+    private final AuthQueryService authQueryService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -37,7 +37,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
         Long userId = (Long) request.getAttribute(Constants.REQ_ATT_USER);
-        Set<String> userPerms = authReader.listUserPermission(userId, PermType.API);
+        Set<String> userPerms = authQueryService.listUserPermission(userId, PermType.API);
         String[] needPerms = permission.value();
         boolean passed = permission.requireAll()
                 ? Arrays.stream(needPerms).allMatch(userPerms::contains)

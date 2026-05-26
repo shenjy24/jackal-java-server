@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserReader {
+public class UserQueryService {
 
     private final UserDao userDao;
     private final UserTokenDao userTokenDao;

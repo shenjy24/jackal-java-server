@@ -6,8 +6,8 @@ import com.tech.common.constant.Constants;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
 import com.tech.repository.entity.auth.AdminUserTokenEntity;
-import com.tech.service.auth.AuthReader;
-import com.tech.service.auth.AuthWriter;
+import com.tech.service.auth.AuthQueryService;
+import com.tech.service.auth.AuthCommandService;
 import com.tech.util.CookieUtil;
 import com.tech.util.TimeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +26,8 @@ import java.lang.annotation.Annotation;
 @RequiredArgsConstructor
 public class AdminLoginInterceptor implements HandlerInterceptor {
 
-    private final AuthReader authReader;
-    private final AuthWriter authWriter;
+    private final AuthQueryService authQueryService;
+    private final AuthCommandService authCommandService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -45,8 +45,8 @@ public class AdminLoginInterceptor implements HandlerInterceptor {
         if (semiAnonymous && StringUtils.isBlank(token)) {
             return true;
         }
-        AdminUserTokenEntity adminToken = authReader.getTokenByToken(token);
-        if (authReader.isExpiredToken(adminToken)) {
+        AdminUserTokenEntity adminToken = authQueryService.getTokenByToken(token);
+        if (authQueryService.isExpiredToken(adminToken)) {
             if (semiAnonymous) {
                 return true;
             }
@@ -56,7 +56,7 @@ public class AdminLoginInterceptor implements HandlerInterceptor {
         long expireTime = adminToken.getExpireTime().getTime();
         if (expireTime - currentTime < Constants.TOKEN_REFRESH_MS) {
             adminToken.setExpireTime(TimeUtil.getTokenExpireTime());
-            authWriter.updateToken(adminToken);
+            authCommandService.updateToken(adminToken);
         }
         request.setAttribute(Constants.REQ_ATT_USER, adminToken.getUserId());
         return true;

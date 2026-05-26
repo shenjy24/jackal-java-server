@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserConverter {
+public class UserAssembler {
 
     public UserVo toUserVo(UserEntity user) {
         if (user == null) {

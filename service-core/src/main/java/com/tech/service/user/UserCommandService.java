@@ -21,7 +21,7 @@ import java.sql.Timestamp;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserWriter {
+public class UserCommandService {
 
     private final UserDao userDao;
     private final UserTokenDao userTokenDao;
