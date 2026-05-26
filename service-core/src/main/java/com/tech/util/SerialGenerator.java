@@ -1,6 +1,7 @@
 package com.tech.util;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 单机流水号生成器
@@ -64,18 +65,25 @@ public class SerialGenerator {
                 if (sequence > MAX_SEQUENCE) {
                     // 序列耗尽，等待进入下一毫秒（极低概率）
                     timestamp = waitNextMillis(lastTimestamp);
-                    sequence = 0;
+                    sequence = randomStart();
                 }
-                seq = sequence++;
             } else {
                 // 新的毫秒：重置序列
-                sequence = 0;
-                seq = sequence++;
+                sequence = randomStart();
                 lastTimestamp = timestamp;
             }
+            seq = sequence++;
         }
 
         return buildSerial(prefix, timestamp, seq);
+    }
+
+    /**
+     * 每个毫秒的序列起点随机落在 [0, MAX_SEQUENCE / 2] 之间
+     * 上限取一半，留出足够的自增空间，避免过早耗尽
+     */
+    private int randomStart() {
+        return ThreadLocalRandom.current().nextInt(MAX_SEQUENCE / 2);
     }
 
     // ===========================
