@@ -5,15 +5,18 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class CookieUtil {
 
     /**
-     * 封装设置cookie方法
+     * 设置 Cookie
      *
      * @param response    响应对象
      * @param cookieName  Cookie 名
      * @param cookieValue Cookie 值
-     * @param maxAge      存活最大时间
+     * @param maxAge      存活最大时间（秒）
      */
     public static void setCookie(HttpServletResponse response, String cookieName, String cookieValue, int maxAge) {
         Cookie cookie = new Cookie(cookieName, cookieValue);
@@ -24,26 +27,28 @@ public class CookieUtil {
     }
 
     /**
-     * 设置Cookie
+     * 设置登录 Token Cookie
      *
-     * @param token 登录token
+     * @param token 登录 token
      */
     public static void setCookie(String token) {
-        setCookie(ServletUtil.getResponse(), Constants.COOKIE_KEY_TOKEN, token, Constants.TOKEN_EXPIRED_MS / 1000);
+        HttpServletResponse response = Objects.requireNonNull(ServletUtil.getResponse());
+        setCookie(response, Constants.COOKIE_KEY_TOKEN, token, Constants.TOKEN_EXPIRED_MS / 1000);
     }
 
     /**
-     * 删除Cookie
+     * 删除 Cookie
      *
-     * @param cookieName cookie名
+     * @param cookieName cookie 名
      */
     public static void removeCookie(String cookieName) {
-        removeCookie(ServletUtil.getResponse(), cookieName);
+        HttpServletResponse response = Objects.requireNonNull(ServletUtil.getResponse());
+        removeCookie(response, cookieName);
     }
 
     public static void removeCookie(HttpServletResponse response, String cookieName) {
-        Cookie cookie = new Cookie(cookieName, null);
-        cookie.setPath("/");//总域名底下都能找到
+        Cookie cookie = new Cookie(cookieName, "");
+        cookie.setPath("/");
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
@@ -51,14 +56,13 @@ public class CookieUtil {
 
     public static String getToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null || cookies.length == 0) {
+        if (cookies == null) {
             return "";
         }
-        for (Cookie cookie : request.getCookies()) {
-            if (cookie.getName().equals(Constants.COOKIE_KEY_TOKEN)) {
-                return cookie.getValue();
-            }
-        }
-        return "";
+        return Arrays.stream(cookies)
+                .filter(c -> Constants.COOKIE_KEY_TOKEN.equals(c.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse("");
     }
 }
