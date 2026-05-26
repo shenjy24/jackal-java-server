@@ -1,15 +1,11 @@
 package com.tech.util;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.tech.config.context.ApplicationContextProvider;
-import com.tech.config.response.bean.BizException;
-import com.tech.config.response.bean.SystemCode;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -27,18 +23,19 @@ public class OkHttpUtil {
 
     private static final OkHttpClient client;
 
-    private static final ThreadPoolTaskExecutor taskExecutor;
-
     private static final MediaType MEDIA_JSON = MediaType.get("application/json; charset=utf-8");
     private static final MediaType MEDIA_STREAM = MediaType.get("application/octet-stream; charset=utf-8");
 
+    private OkHttpUtil() {
+    }
+
     static {
-        // 配置自定义线程池
-        taskExecutor = (ThreadPoolTaskExecutor) ApplicationContextProvider.getApplicationContext().getBean("okHttpExecutor");
         client = new OkHttpClient().newBuilder()
-                .dispatcher(new Dispatcher(taskExecutor.getThreadPoolExecutor()))
-                .readTimeout(100, TimeUnit.SECONDS)
-                .writeTimeout(100, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .callTimeout(60, TimeUnit.SECONDS)
+                .connectionPool(new ConnectionPool(20, 5, TimeUnit.MINUTES))
                 .build();
     }
 
@@ -47,8 +44,7 @@ public class OkHttpUtil {
         if (httpUrl == null) {
             return null;
         }
-        HttpUrl.Builder builder = httpUrl.newBuilder();
-        Request request = new Request.Builder().url(builder.build()).build();
+        Request request = new Request.Builder().url(httpUrl).build();
         Call call = client.newCall(request);
         return call.execute();
     }
@@ -180,7 +176,6 @@ public class OkHttpUtil {
      * @param url    路径
      * @param params 参与
      * @return 响应
-     * @throws IOException IO异常
      */
     public static Response postJson(String url, String params) throws IOException {
         return postJson(url, params, Collections.emptyMap());
@@ -193,26 +188,21 @@ public class OkHttpUtil {
      * @param params 参与
      * @return 响应
      */
-    public static Response postJson(String url, String params, Map<String, String> headers) {
-        try {
-            // 创建 RequestBody 包装 JSON 数据
-            RequestBody requestBody = RequestBody.create(MEDIA_JSON, params);
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(url)
-                    .post(requestBody);
-            // 添加头部
-            if (MapUtils.isNotEmpty(headers)) {
-                for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    requestBuilder.addHeader(entry.getKey(), entry.getValue());
-                }
+    public static Response postJson(String url, String params, Map<String, String> headers) throws IOException {
+        // 创建 RequestBody 包装 JSON 数据
+        RequestBody requestBody = RequestBody.create(params, MEDIA_JSON);
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .post(requestBody);
+        // 添加头部
+        if (MapUtils.isNotEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                requestBuilder.addHeader(entry.getKey(), entry.getValue());
             }
-
-            Request request = requestBuilder.build();
-            return client.newCall(request).execute();
-        } catch (Exception e) {
-            log.error("postJosn error", e);
-            throw new BizException(SystemCode.SERVER_ERROR);
         }
+
+        Request request = requestBuilder.build();
+        return client.newCall(request).execute();
     }
 
     public static <T> T postJson(String url, Map<String, Object> params, Map<String, String> headers, Class<T> clazz) {
@@ -268,24 +258,20 @@ public class OkHttpUtil {
      * @param body 参数
      * @return 响应
      */
-    public static Response postBody(String url, byte[] body, Map<String, String> headers) {
-        try {
-            RequestBody requestBody = RequestBody.create(MEDIA_STREAM, body);
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(url)
-                    .post(requestBody);
-            // 添加头部
-            if (MapUtils.isNotEmpty(headers)) {
-                for (Map.Entry<String, String> entry : headers.entrySet()) {
-                    requestBuilder.addHeader(entry.getKey(), entry.getValue());
-                }
+    public static Response postBody(String url, byte[] body, Map<String, String> headers) throws IOException {
+        RequestBody requestBody = RequestBody.create(body, MEDIA_STREAM);
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(url)
+                .post(requestBody);
+        // 添加头部
+        if (MapUtils.isNotEmpty(headers)) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                requestBuilder.addHeader(entry.getKey(), entry.getValue());
             }
-
-            Request request = requestBuilder.build();
-            return client.newCall(request).execute();
-        } catch (Exception e) {
-            throw new BizException(SystemCode.SERVER_ERROR);
         }
+
+        Request request = requestBuilder.build();
+        return client.newCall(request).execute();
     }
 
     public static <T> T postBody(String url, byte[] params, Map<String, String> headers, Class<T> clazz) {
@@ -297,7 +283,7 @@ public class OkHttpUtil {
 
             data = response.body().string();
         } catch (IOException e) {
-            log.error("调用form post方法异常", e);
+            log.error("调用body post方法异常", e);
             return null;
         }
 
