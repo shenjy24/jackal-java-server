@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-06
+ * @since 2025-01-06
  */
 public class TimeUtil {
     public static final String FORMAT_YYYY_MM_DD = "yyyy-MM-dd";

@@ -7,7 +7,7 @@ import com.tech.config.response.bean.CodeStatus;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-02
+ * @since 2025-01-02
  */
 public enum ErrorCode implements CodeStatus {
     PARAM_ERROR("100001", "参数异常"),

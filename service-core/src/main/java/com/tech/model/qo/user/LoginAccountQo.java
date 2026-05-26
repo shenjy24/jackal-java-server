@@ -8,7 +8,7 @@ import lombok.Data;
  * 账号密码登录参数
  *
  * @author Jonas
- * @date 2025-08-01
+ * @since 2025-08-01
  * @version 1.0
  */
 @Data

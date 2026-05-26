@@ -7,7 +7,7 @@ import java.security.SecureRandom;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-07
+ * @since 2025-01-07
  */
 public class RandomUtil {
 

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git config *)",
       "Bash(dos2unix *)",
-      "Bash(xargs -r file)"
+      "Bash(xargs -r file)",
+      "Bash(xargs sed *)"
     ]
   }
 }

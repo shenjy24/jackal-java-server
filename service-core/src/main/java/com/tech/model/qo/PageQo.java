@@ -7,7 +7,7 @@ import lombok.Data;
  * 分页查询参数
  *
  * @author shenjy
- * @date 2023/12/18 20:47
+ * @since 2023/12/18 20:47
  */
 @Data
 public class PageQo {

@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-07
+ * @since 2025-01-07
  */
 public class StrUtil {
 

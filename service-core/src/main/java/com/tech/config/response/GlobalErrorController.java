@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-06
+ * @since 2025-01-06
  */
 @RestController
 @RequestMapping("${server.error.path:${error.path:/error}}")

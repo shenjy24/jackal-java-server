@@ -11,7 +11,7 @@ import java.io.Serializable;
  * 通用返回结构
  *
  * @author shenjy
- * @time  2020/8/13
+ * @since  2020/8/13
  */
 @Getter
 @Setter

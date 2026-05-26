@@ -7,7 +7,7 @@ import lombok.Data;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-02-19
+ * @since 2025-02-19
  */
 @Data
 public class UserIdQo {

@@ -11,7 +11,7 @@ import java.sql.Timestamp;
  * BaseEntity
  *
  * @author shenjy
- * @time 2024/1/27 15:03
+ * @since 2024/1/27 15:03
  */
 @Data
 public abstract class BaseEntity implements Serializable {

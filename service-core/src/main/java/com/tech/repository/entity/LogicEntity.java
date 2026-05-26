@@ -9,7 +9,7 @@ import java.io.Serializable;
  * 逻辑删除实体
  *
  * @author shenjy
- * @time 2024/1/27 15:03
+ * @since 2024/1/27 15:03
  */
 @Data
 public abstract class LogicEntity extends BaseEntity implements Serializable {

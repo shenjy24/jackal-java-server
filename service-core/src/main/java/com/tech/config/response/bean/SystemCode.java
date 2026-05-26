@@ -5,7 +5,7 @@ package com.tech.config.response.bean;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-02
+ * @since 2025-01-02
  */
 public enum  SystemCode implements CodeStatus {
     SUCCESS("2000", "success"),

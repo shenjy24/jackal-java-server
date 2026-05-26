@@ -5,7 +5,7 @@ package com.tech.common.constant;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-02
+ * @since 2025-01-02
  */
 public class Constants {
     public static final String COOKIE_KEY_TOKEN = "token";

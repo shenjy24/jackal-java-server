@@ -8,7 +8,7 @@ import java.util.Date;
  *
  * @author Jonas
  * @version 1.0
- * @date 2025-09-24
+ * @since 2025-09-24
  */
 public class SerialGenerator {
 

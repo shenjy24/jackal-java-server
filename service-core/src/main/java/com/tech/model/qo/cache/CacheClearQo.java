@@ -7,7 +7,7 @@ import lombok.Data;
  *
  * @author Jonas
  * @version 1.0
- * @date 2025-09-29
+ * @since 2025-09-29
  */
 @Data
 public class CacheClearQo {

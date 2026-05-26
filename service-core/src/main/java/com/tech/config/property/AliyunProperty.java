@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-20
+ * @since 2025-01-20
  */
 @Data
 @Configuration

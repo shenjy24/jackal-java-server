@@ -5,7 +5,7 @@ package com.tech.config.response.bean;
  * 自定义异常类
  *
  * @author shenjy
- * @time 2020/8/13
+ * @since 2020/8/13
  */
 public class BizException extends RuntimeException {
     private final CodeStatus codeStatus;

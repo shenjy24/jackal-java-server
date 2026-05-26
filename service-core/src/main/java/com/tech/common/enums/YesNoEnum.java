@@ -6,7 +6,7 @@ import lombok.Getter;
  * YesNoEnum
  *
  * @author shenjy
- * @date 2025-01-02
+ * @since 2025-01-02
  * @version 1.0
  */
 @Getter

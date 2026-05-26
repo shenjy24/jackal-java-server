@@ -9,7 +9,7 @@ import java.util.List;
  * 分页返回结构
  *
  * @author shenjy
- * @time 2020/8/14
+ * @since 2020/8/14
  */
 @Data
 public class JsonPage<T> {

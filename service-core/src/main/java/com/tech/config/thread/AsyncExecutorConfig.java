@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-06
+ * @since 2025-01-06
  */
 @Slf4j
 @EnableAsync

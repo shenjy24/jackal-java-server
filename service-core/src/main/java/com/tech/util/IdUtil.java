@@ -7,7 +7,7 @@ import java.util.UUID;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-02
+ * @since 2025-01-02
  */
 public class IdUtil {
 

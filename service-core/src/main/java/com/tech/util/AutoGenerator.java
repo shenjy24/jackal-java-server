@@ -17,7 +17,7 @@ import java.sql.Types;
  *
  * @author shenjy
  * @version 1.0
- * @date 2025-01-02
+ * @since 2025-01-02
  */
 public class AutoGenerator {
     public static void main(String[] args) {
