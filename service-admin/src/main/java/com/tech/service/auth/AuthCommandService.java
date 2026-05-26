@@ -8,7 +8,7 @@ import com.tech.repository.dao.auth.AdminUserDao;
 import com.tech.repository.dao.auth.AdminUserTokenDao;
 import com.tech.util.CookieUtil;
 import com.tech.util.IdUtil;
-import com.tech.util.MD5Util;
+import com.tech.util.CryptoUtil;
 import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class AuthCommandService {
 
     public AdminUserEntity loginByAccount(String account, String password) {
         AdminUserEntity adminUser = adminUserDao.getByAccount(account);
-        if (adminUser == null || !MD5Util.verifySaltMd5(password, adminUser.getPassword())) {
+        if (adminUser == null || CryptoUtil.notMatches(password, adminUser.getPassword())) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
         AdminUserTokenEntity token = saveOrUpdateToken(adminUser.getUserId());

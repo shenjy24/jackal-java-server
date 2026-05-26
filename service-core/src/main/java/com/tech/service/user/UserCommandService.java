@@ -10,7 +10,7 @@ import com.tech.repository.dao.user.UserDao;
 import com.tech.repository.dao.user.UserTokenDao;
 import com.tech.util.CookieUtil;
 import com.tech.util.IdUtil;
-import com.tech.util.MD5Util;
+import com.tech.util.CryptoUtil;
 import com.tech.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class UserCommandService {
         if (userAccount == null) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
-        if (!MD5Util.verifySaltMd5(password, userAccount.getPassword())) {
+        if (CryptoUtil.notMatches(password, userAccount.getPassword())) {
             throw new BizException(ErrorCode.USER_ERROR4);
         }
         UserEntity user = userDao.getById(userAccount.getUserId());
