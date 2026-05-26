@@ -36,4 +36,10 @@ public final class CryptoUtil {
     public static boolean notMatches(String raw, String encoded) {
         return !matches(raw, encoded);
     }
+
+    public static void main(String[] args) {
+        String raw = "admin";
+        String encoded = CryptoUtil.encode("admin");
+        System.out.println(CryptoUtil.matches(raw, encoded));
+    }
 }
