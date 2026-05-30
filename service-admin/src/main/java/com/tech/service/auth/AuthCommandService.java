@@ -40,7 +40,7 @@ public class AuthCommandService {
         }
         AdminUserTokenEntity token = adminUserTokenDao.getByAdminUserId(adminUserId);
         String tokenValue = IdUtil.uuid();
-        Timestamp expireTime = TimeUtil.getTokenExpireTime();
+        Timestamp expireTime = TimeUtil.tokenExpireTime();
         if (token == null) {
             token = new AdminUserTokenEntity(adminUserId, tokenValue, expireTime);
             adminUserTokenDao.save(token);
