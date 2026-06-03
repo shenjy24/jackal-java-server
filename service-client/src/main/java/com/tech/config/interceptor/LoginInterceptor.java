@@ -55,7 +55,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         long currentTime = System.currentTimeMillis();
         long expireTime = userToken.getExpireTime().getTime();
         if (expireTime - currentTime < Constants.TOKEN_REFRESH_MS) {
-            userToken.setExpireTime(TimeUtil.getTokenExpireTime());
+            userToken.setExpireTime(TimeUtil.tokenExpireTime());
             userCommandService.updateUserToken(userToken);
         }
         request.setAttribute(Constants.REQ_ATT_USER, userToken.getUserId());
