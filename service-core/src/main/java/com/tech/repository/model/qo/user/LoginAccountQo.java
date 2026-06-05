@@ -1,4 +1,4 @@
-package com.tech.model.qo.user;
+package com.tech.repository.model.qo.user;
 
 import com.tech.common.constant.ErrorMsg;
 import jakarta.validation.constraints.NotBlank;

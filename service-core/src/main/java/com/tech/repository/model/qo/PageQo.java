@@ -1,4 +1,4 @@
-package com.tech.model.qo;
+package com.tech.repository.model.qo;
 
 import com.tech.common.constant.Constants;
 import lombok.Data;

@@ -1,7 +1,7 @@
 package com.tech.service.user;
 
 import com.tech.repository.entity.user.UserEntity;
-import com.tech.model.vo.user.UserVo;
+import com.tech.repository.model.vo.user.UserVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

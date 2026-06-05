@@ -1,4 +1,4 @@
-package com.tech.model.qo.cache;
+package com.tech.repository.model.qo.cache;
 
 import lombok.Data;
 

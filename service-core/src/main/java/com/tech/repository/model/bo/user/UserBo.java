@@ -1,4 +1,4 @@
-package com.tech.model.bo.user;
+package com.tech.repository.model.bo.user;
 
 import lombok.Data;
 
