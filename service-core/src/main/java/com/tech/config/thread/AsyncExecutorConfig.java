@@ -46,7 +46,7 @@ public class AsyncExecutorConfig implements AsyncConfigurer {
     @Bean
     public TaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setPoolSize(10);  // 设置线程池大小
+        taskScheduler.setPoolSize(10);
         taskScheduler.setThreadNamePrefix("scheduled-");
         return taskScheduler;
     }

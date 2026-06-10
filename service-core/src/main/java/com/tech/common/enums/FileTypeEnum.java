@@ -9,7 +9,7 @@ import java.util.Map;
  * FileTypeEnum
  *
  * @author shenjy
- * @date 2023/10/23 10:10
+ * @since 2023/10/23 10:10
  */
 @Getter
 public enum FileTypeEnum {

@@ -7,7 +7,7 @@ package com.tech.config.response.bean;
  * @version 1.0
  * @since 2025-01-02
  */
-public enum  SystemCode implements CodeStatus {
+public enum SystemCode implements CodeStatus {
     SUCCESS("2000", "success"),
     NO_LOGIN("2001", "no login"),
     NO_PERM("2002", "no perm"),

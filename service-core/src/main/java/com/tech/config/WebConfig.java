@@ -16,7 +16,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.List;
 
 /**
- * WEB 配置
+ * WEB 通用配置（CORS、消息转换、参数解析）。
+ * 各业务模块的登录/权限拦截器由各自的 WebMvcConfigurer 注册。
  *
  * @author shenjy
  * @version 1.0
@@ -52,8 +53,6 @@ public class WebConfig implements WebMvcConfigurer {
         simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
         simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
         objectMapper.registerModule(simpleModule);
-        // 设置只包含非 null 值的属性
-//        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         // 前端传多余参数不会报错
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 

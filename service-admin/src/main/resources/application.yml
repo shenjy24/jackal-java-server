@@ -1,3 +1,7 @@
 spring:
   config:
     import: "classpath:application-core.yml"
+  application:
+    name: "jackal-java-admin"
+  profiles:
+    default: local

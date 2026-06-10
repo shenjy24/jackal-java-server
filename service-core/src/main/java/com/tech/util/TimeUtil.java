@@ -243,7 +243,6 @@ public class TimeUtil {
         if (timestamp == null) {
             return null;
         }
-        // 使用 LocalTime.MAX 确保包含一天的最后一毫秒，避免精度丢失
         LocalDateTime end = timestamp.toLocalDateTime().toLocalDate().atTime(LocalTime.MAX);
         return Timestamp.valueOf(end);
     }

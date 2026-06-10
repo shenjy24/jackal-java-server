@@ -5,9 +5,9 @@ import com.tech.common.annotation.auth.SemiAnonymous;
 import com.tech.common.constant.Constants;
 import com.tech.config.response.bean.BizException;
 import com.tech.config.response.bean.SystemCode;
-import com.tech.repository.entity.auth.AdminUserTokenEntity;
-import com.tech.service.auth.AuthQueryService;
+import com.tech.repository.entity.auth.AuthUserTokenEntity;
 import com.tech.service.auth.AuthCommandService;
+import com.tech.service.auth.AuthQueryService;
 import com.tech.util.CookieUtil;
 import com.tech.util.TimeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +45,7 @@ public class AdminLoginInterceptor implements HandlerInterceptor {
         if (semiAnonymous && StringUtils.isBlank(token)) {
             return true;
         }
-        AdminUserTokenEntity adminToken = authQueryService.getTokenByToken(token);
+        AuthUserTokenEntity adminToken = authQueryService.getTokenByToken(token);
         if (authQueryService.isExpiredToken(adminToken)) {
             if (semiAnonymous) {
                 return true;

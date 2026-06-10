@@ -1,8 +1,7 @@
 spring:
   config:
     import: "classpath:application-core.yml"
-
-# 微信小程序相关配置
-applet:
-  appid: "******"
-  secret: "******"
+  application:
+    name: "jackal-java-client"
+  profiles:
+    default: local

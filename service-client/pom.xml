@@ -13,16 +13,13 @@
     </parent>
 
     <artifactId>service-client</artifactId>
-
     <name>service-client</name>
     <description>C端服务</description>
 
     <dependencies>
-        <!-- 引入业务逻辑模块 -->
         <dependency>
             <groupId>com.tech</groupId>
             <artifactId>service-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -38,4 +35,4 @@
             </plugin>
         </plugins>
     </build>
-</project> 
+</project>
