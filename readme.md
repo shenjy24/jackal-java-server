@@ -1,308 +1,138 @@
-### 1. 创建tech用户
-#### 创建用户
-```
-# 创建用户并创建home目录
-sudo useradd -m tech
-# 设置密码
-sudo passwd tech
-```
-#### 编辑/etc/sudoers文件
-```
-visudo
-```
-添加如下配置
-```
-tech ALL=(ALL:ALL) ALL
-```
+# jackal-java-server
 
-### 2. 安装git
+Java 21 + Spring Boot 3 多模块后端框架。由共享核心库与两个可独立部署的服务组成：
 
-如果你的系统使用 APT 包管理器（如 Ubuntu、Debian 等），安装 Git 的命令如下：
+- `service-core`：共享核心库（通用配置、统一响应、异常处理、MyBatis Plus、缓存、OSS、工具类、用户域）。
+- `service-admin`：管理后台服务（auth/RBAC，路由 `/admin/**`），默认本地端口 **8081**。
+- `service-client`：C 端服务（用户、缓存接口，路由 `/web/**`），默认本地端口 **8080**。
 
-```
-# 更新软件包索引
-sudo apt update
-# 安装Git
-sudo apt install git
-```
+`service-admin` 与 `service-client` 各自打包为可执行 jar、独立容器运行，共同依赖 `service-core`。
 
-如果你的系统使用 YUM 包管理器（如 CentOS、RHEL 等），安装 Git 的命令如下：
+## 技术栈
 
-```
-# 安装Git
-sudo yum install git
-```
+| 类型 | 说明 |
+|------|------|
+| JDK | Java 21 |
+| Web 框架 | Spring Boot 3 |
+| 构建工具 | Maven（多模块） |
+| 持久层 | MyBatis Plus |
+| 数据库 | MySQL |
+| 容器化 | Docker、Docker Compose |
 
-安装完成后，可以通过以下命令验证 Git 是否安装成功：
+## 模块结构
 
-```
-git --version
-```
-如果安装成功，会显示 Git 的版本信息。
-
-### 3. 安装JDK21
-```
-# 创建安装目录
-sudo mkdir -p /usr/lib/jvm
-
-# 下载JDK 21（请替换为最新版本链接）
-wget https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
-
-# 解压文件
-sudo tar -zxvf jdk-21_linux-x64_bin.tar.gz -C /usr/lib/jvm/
-
-# 配置环境变量
-echo 'export JAVA_HOME=/usr/lib/jvm/jdk-21.0.8' >> /etc/profile
-echo 'export PATH=$JAVA_HOME/bin:$PATH' >> /etc/profile
-source /etc/profile
-
-# 验证安装
-java -version
+```text
+jackal-java-server/                 # 父模块（packaging=pom，聚合 + 依赖/插件管理）
+├── service-core/                   # 共享库（无主类）
+│   └── src/main/java/com/tech/
+│       ├── common/                 # 通用注解、常量、枚举
+│       ├── component/              # OSS、缓存等组件封装
+│       ├── config/                 # Spring、MyBatis、响应、CORS、线程池等配置
+│       ├── repository/             # 用户域 Entity/DAO/Mapper/Model + BaseEntity
+│       ├── service/user/           # 用户域业务逻辑
+│       └── util/                   # 工具类
+├── service-admin/                  # 管理后台服务（AdminApplication）
+│   └── src/main/java/com/tech/
+│       ├── controller/admin/       # /admin/** 接口
+│       ├── config/                 # AdminWebConfig + 登录/权限拦截器
+│       ├── common/                 # Permission 注解、权限枚举
+│       ├── repository/.../auth/    # auth/RBAC 域
+│       └── service/auth/           # 权限业务逻辑
+├── service-client/                 # C 端服务（ClientApplication）
+│   └── src/main/java/com/tech/
+│       ├── controller/             # /web/** 接口
+│       └── config/                 # ClientWebConfig + 用户登录拦截器
+├── document/
+│   ├── deploy/                     # 部署脚本、部署方案与中间件配置
+│   └── sql/                        # 初始化 SQL
+├── pom.xml
+└── readme.md
 ```
 
-### 4. 安装mvn
+公共基础设施（统一响应包装、全局异常、MyBatis 分页、`@MapperScan("com.tech")`、CORS、`@UserId` 解析等）集中在 `service-core`，两个服务通过组件扫描自动加载；各自的登录/权限拦截器由各模块的 `WebMvcConfigurer` 注册。
 
-如果你的系统使用 APT 包管理器（如 Ubuntu、Debian 等），安装命令如下：
+## 环境与配置
 
-```
-# 更新软件包索引
-sudo apt update
-# 安装Maven
-sudo apt install maven
-```
-如果你的系统使用 YUM 包管理器（如 CentOS、RHEL 等），安装命令如下：
+| Profile | 用途 | 数据库 |
+|---------|------|--------|
+| `local` | 本地开发 | `template` |
+| `dev` | 测试环境 | `template` |
+| `prod` | 生产环境 | `template` |
 
-```
-# 安装Maven
-sudo yum install maven
-```
-安装完成后，可以通过以下命令验证 Maven 是否安装成功：
+各服务的配置文件：
 
-```
-mvn --version
+```text
+service-core/src/main/resources/application-core.yml   # 共享基础配置（被各服务 import）
+service-admin/src/main/resources/application.yml + application-{local,dev,prod}.yml
+service-client/src/main/resources/application.yml + application-{local,dev,prod}.yml
 ```
 
-如果安装成功，会显示 Maven 的版本信息、Java 版本信息以及安装路径等详细内容。
+各服务的 `application.yml` 通过 `spring.config.import: classpath:application-core.yml` 复用核心配置，再按 profile 覆盖数据源、端口、OSS bucket 等。上线前请替换数据库连接、OSS 密钥等敏感配置。
 
-### 5. 安装Docker
-使用 APT（适用于 Ubuntu、Debian 等）
-```
-# 更新软件包索引并安装依赖
-sudo apt update
-sudo apt install -y ca-certificates curl gnupg lsb-release
+## 本地开发
 
-# 添加Docker官方GPG密钥
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+启动管理后台（端口 8081）：
 
-# 设置Docker稳定版仓库
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# 安装Docker引擎
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# 启动Docker并设置开机自启
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# 验证安装
-sudo docker --version
+```bash
+mvn -pl service-admin -am spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-使用 YUM（适用于 CentOS、RHEL 等）
-```
-# 安装必要的依赖
-sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+启动 C 端（端口 8080）：
 
-# 设置Docker稳定版仓库
-sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-
-# 安装Docker引擎
-sudo yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-# 启动Docker并设置开机自启
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# 验证安装
-sudo docker --version
+```bash
+mvn -pl service-client -am spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-使用阿里云系统
-```
-# 更新系统
-sudo dnf -y update
-# 可访问公网时使用：
-sudo dnf config-manager --add-repo=https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+编译检查（全部模块）：
 
-# 安装兼容插件及Docker
-sudo dnf -y install dnf-plugin-releasever-adapter --repo alinux3-plus
-sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# 启动Docker并设置开机自启
-sudo systemctl start docker
-sudo systemctl enable docker
+```bash
+mvn -q -DskipTests compile
 ```
 
+打包单个可部署模块：
 
-可选：将当前用户添加到 docker 组（避免每次使用 sudo），切换到特定用户，执行以下指令
-```
-sudo usermod -aG docker $USER
-```
-
-添加后需要重新登录才能生效。
-
-安装成功后，`docker --version` 命令会显示 Docker 的版本信息。
-
-### 6. 安装node
-#### （1） 使用 nvm 安装
-```
-# 安装nvm
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
-```
-执行上述命令后会自动在~/.bashrc中加入以下配置：
-```
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-```
-如果使用 zsh ，需要手动在 ~/.zshrc 中增加以上配置，并执行 source ~/.zshrc。
-
-执行以下指令安装 node:
-```
-# 安装特定版本node
-nvm install <node的版本>
-# 当前 shell 下使用某个 Node 版本
-nvm use <node的版本>
+```bash
+mvn -pl service-admin -am -DskipTests package
+mvn -pl service-client -am -DskipTests package
 ```
 
-#### (2) 直接安装
-对于 Ubuntu/Debian 系统：
-```
-# 更新包索引
-sudo apt update
+本地调试前请确认：MySQL 已创建 `template` 数据库、`application-local.yml` 中连接可用、依赖的 OSS/缓存等外部服务已配置。
 
-# 安装Node.js和npm
-sudo apt install nodejs npm
+## 数据库脚本
 
-# 验证安装
-node -v
-npm -v
+```text
+document/sql/
+├── production/
+│   ├── ddl/    # 表结构（auth.sql、user.sql）
+│   └── dml/    # 初始化数据（auth.sql：超管账号、角色、权限及绑定）
+└── versioned/  # 增量变更占位（ddl.sql、dml.sql）
 ```
 
-对于 CentOS/RHEL 系统：
+## 部署
 
-```
-# 安装EPEL源
-sudo yum install epel-release
+部署方案与中间件配置统一维护在 `document/deploy/`：
 
-# 安装Node.js和npm
-sudo yum install nodejs npm
-
-# 安装pnpm
-npm install -g pnpm
-
-# 验证安装
-node -v
-npm -v
-pnpm -v
+```text
+document/deploy/
+├── deployment-plan/
+│   ├── online/     # 联网部署（拉代码 + 多阶段构建），按模块发布
+│   └── offline/    # 内网部署（上传 jar + 基础镜像），按模块发布
+├── docker/         # Docker 缓存清理、离线镜像加载
+├── maven/          # 构建用 Maven settings 示例（占位凭据）
+├── mysql/          # MySQL Docker 部署与备份
+├── nginx/          # Nginx 配置参考
+└── software/       # 服务器基础软件安装指南
 ```
 
-### 7. 安装Nginx
-Ubuntu/Debian 系统
-```
-# 更新包索引
-sudo apt update
+部署以模块为单位执行，例如联网部署：
 
-# 安装Nginx
-sudo apt install nginx
-
-# 启动Nginx服务
-sudo systemctl start nginx
-
-# 设置开机自启动
-sudo systemctl enable nginx
-
-# 检查服务状态
-sudo systemctl status nginx
+```bash
+cd document/deploy/deployment-plan/online
+bash start.sh service-admin     # 部署管理后台
+bash start.sh service-client    # 部署 C 端
 ```
 
-CentOS/RHEL 系统
-```
-# 安装Nginx（CentOS 7需要先安装EPEL源）
-sudo yum install epel-release  # CentOS 7专用
-sudo yum install nginx
+默认端口：`service-client` -> `18881`，`service-admin` -> `18882`。详见：
 
-# 启动Nginx服务
-sudo systemctl start nginx
-
-# 设置开机自启动
-sudo systemctl enable nginx
-
-# 检查服务状态
-sudo systemctl status nginx
-```
-
-修改配置文件`nginx.conf`的user配置：
-```
-user: root
-```
-
-### 8. 安装MySQL
-Ubuntu/Debian 系统
-```
-# 更新包索引
-sudo apt update
-
-# 安装MySQL
-sudo apt install -y mysql-server
-
-# 启动MySQL服务
-sudo systemctl start mysql
-
-# 设置开机自启动
-sudo systemctl enable mysql
-
-# 检查服务状态
-sudo systemctl status mysql
-```
-1. 首次执行可以执行以下指令：
-```
-sudo mysql_secure_installation
-```
-2. 使得root用户可以远程登录，进入mysql终端执行以下指令：
-```
-# 确认 root 的 host
-SELECT user, host, plugin FROM mysql.user WHERE user='root';
-
-# 本地 root@localhost 依然走 socket
-# 远程用 root@%，清晰可控
-CREATE USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'StrongRootPass!';
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-```
-修改配置文件`my.cnf`的bind-address配置：
-```
-sudo vim /etc/mysql/mysql.conf.d/mysqld.cnf
-```
-修改为：
-```
-bind-address = 0.0.0.0
-```
-配置完成后，重启MySQL服务：
-```
-sudo systemctl restart mysql
-```
-
-3. 创建业务用户和授权
-```
-# 创建远程用户
-CREATE USER 'cemetery'@'%' IDENTIFIED WITH mysql_native_password BY 'StrongCemeteryPass!';
-
-# 授权
-GRANT ALL PRIVILEGES ON cemetery_dev.* TO 'cemetery'@'%';
-FLUSH PRIVILEGES;
-```
-- 允许用户 cemetery 从任意主机登录
-- 对数据库 cemetery_dev 中的 所有表 拥有全部操作权限
+- `document/deploy/deployment-plan/online/联网部署文档.md`
+- `document/deploy/deployment-plan/offline/内网部署文档.md`
