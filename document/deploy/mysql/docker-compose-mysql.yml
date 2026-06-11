@@ -5,39 +5,58 @@ services:
     restart: unless-stopped
     ports:
       - "${MYSQL_PORT:-3306}:3306"
+
     environment:
+      # 容器操作系统级别的时区设置
       TZ: Asia/Shanghai
+      # Root 账号密码
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+      # 自动创建业务数据库和专属普通账号，符合最小权限安全原则
       MYSQL_DATABASE: ${MYSQL_DATABASE:-template}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_bin
-      - --default-time-zone=+08:00
+      MYSQL_USER: ${MYSQL_USER:-app_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_pass}
+      # 巧妙注入 MYSQL_PWD 变量：供底下的 healthcheck 隐式读取，避免在 ps 进程中泄露密码
+      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-123456}
+
     volumes:
+      # 核心数据持久化目录
       - mysql-data:/var/lib/mysql
-      - ./mysql/conf.d:/etc/mysql/conf.d
+      # 挂载自定义配置文件（增加 :ro 设为只读，提升安全性）
+      - ./mysql/conf.d/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      # 首次启动时的初始化 SQL 脚本目录（仅在数据目录为空时执行一次）
       - ./mysql/init:/docker-entrypoint-initdb.d
+      # 将慢查询、错误日志映射到宿主机，方便排查问题
       - ./mysql/logs:/var/log/mysql
+      # 挂载宿主机时区文件，确保容器内部 OS 的系统日志与宿主机时间分秒不差
+      - /etc/localtime:/etc/localtime:ro
+
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      # 健康检查：显式指定 -uroot，密码会自动从 environment 的 MYSQL_PWD 读取
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "--silent"]
+      interval: 10s       # 每 10 秒检查一次
+      timeout: 5s         # 检查超时时间 5 秒
+      retries: 5          # 连续 5 次失败则判定为不健康
+      start_period: 30s   # 给 MySQL 启动留出 30 秒宽限期，期间检查失败不计入错误
+
+    # 容器停止宽限期：给 InnoDB 缓冲池足够的时间将脏页刷入磁盘，避免下次启动时进行漫长的崩溃恢复
+    stop_grace_period: 60s
+
     deploy:
       resources:
+        # 硬限制 (上限)：当 MySQL 内存飙升碰到 512M 时，Docker 会直接 Kill 重启它，保护宿主机不死
         limits:
-          cpus: "1.0"        # 最多使用 1 个 CPU 核心
-          memory: 512M       # 内存上限 512M
+          memory: 512M
+        # 软限制 (保底)：告知系统此容器日常运行约需 215M，方便集群调度
         reservations:
-          cpus: "0.5"        # 保证至少 0.5 核
-          memory: 215M       # 保证至少 215M 内存
+          memory: 215M
+
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"      # 限制单个日志文件大小
-        max-file: "3"        # 最多保留 3 个日志文件
+        max-size: "50m"   # 单个日志文件最大 50M
+        max-file: "3"     # 最多保留 3 个旧日志文件
+        compress: "true"  # 压缩旧日志，节省磁盘空间
 
 volumes:
   mysql-data:
-    name: mysql-data   # 可选：固定卷的名称
+    name: mysql-data
