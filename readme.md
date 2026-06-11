@@ -136,3 +136,10 @@ bash start.sh service-client    # 部署 C 端
 
 - `document/deploy/deployment-plan/online/联网部署文档.md`
 - `document/deploy/deployment-plan/offline/内网部署文档.md`
+
+前端页面与接口路由约定如下：
+
+- 管理后台页面：`/admin/`
+- 管理后台接口：`/admin/api/**`，由 Nginx 去掉 `/admin/api` 前缀后转发到 `service-admin` 的 `/admin/**` 接口
+- C 端页面：`/`
+- C 端接口：`/api/**`
