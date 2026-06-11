@@ -11,10 +11,6 @@ services:
       TZ: Asia/Shanghai
       # Root 账号密码
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
-      # 自动创建业务数据库和专属普通账号，符合最小权限安全原则
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-template}
-      MYSQL_USER: ${MYSQL_USER:-app_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_pass}
       # 巧妙注入 MYSQL_PWD 变量：供底下的 healthcheck 隐式读取，避免在 ps 进程中泄露密码
       MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-123456}
 
