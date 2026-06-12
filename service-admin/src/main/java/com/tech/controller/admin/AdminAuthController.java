@@ -300,7 +300,8 @@ public class AdminAuthController {
     @Permission(PermCode.PERM_QUERY)
     @PostMapping("/queryAuthPerm")
     public JsonPage<AuthPermVo> queryAuthPerm(@RequestBody AuthPermQueryQo qo) {
-        IPage<AuthPermEntity> page = authQueryService.queryAuthPerm(qo.getCode(), qo.getName(), qo.getType(), qo.getPageNum(), qo.getPageSize());
+        IPage<AuthPermEntity> page = authQueryService.queryAuthPerm(qo.getCode(), qo.getName(), qo.getType(),
+                qo.getComponent(), qo.getPageNum(), qo.getPageSize());
         return new JsonPage<>(page.getTotal(), authAssembler.toAuthPermVo(page.getRecords()));
     }
 
@@ -337,7 +338,8 @@ public class AdminAuthController {
     @Permission(PermCode.PERM_SAVE)
     @PostMapping("/saveAuthPerm")
     public AuthPermVo saveAuthPerm(@Valid @RequestBody AuthPermQo qo) {
-        AuthPermEntity perm = authCommandService.saveAuthPerm(qo.getParentId(), qo.getCode(), qo.getName(), qo.getType(), qo.getIcon(), qo.getPath(), qo.getSort(), qo.getRemark());
+        AuthPermEntity perm = authCommandService.saveAuthPerm(qo.getParentId(), qo.getCode(), qo.getName(), qo.getType(),
+                qo.getIcon(), qo.getPath(), qo.getComponent(), qo.getSort(), qo.getRemark());
         return authAssembler.toAuthPermVo(perm);
     }
 
@@ -350,7 +352,8 @@ public class AdminAuthController {
     @Permission(PermCode.PERM_UPDATE)
     @PostMapping("/updateAuthPerm")
     public AuthPermVo updateAuthPerm(@Valid @RequestBody AuthPermQo qo) {
-        AuthPermEntity perm = authCommandService.updateAuthPerm(qo.getId(), qo.getParentId(), qo.getCode(), qo.getName(), qo.getType(), qo.getIcon(), qo.getPath(), qo.getSort(), qo.getRemark());
+        AuthPermEntity perm = authCommandService.updateAuthPerm(qo.getId(), qo.getParentId(), qo.getCode(), qo.getName(),
+                qo.getType(), qo.getIcon(), qo.getPath(), qo.getComponent(), qo.getSort(), qo.getRemark());
         return authAssembler.toAuthPermVo(perm);
     }
 
