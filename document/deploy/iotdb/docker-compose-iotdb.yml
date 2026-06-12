@@ -1,0 +1,69 @@
+services:
+  iotdb-service:
+    image: apache/iotdb:2.0.6-standalone
+    hostname: iotdb
+    container_name: iotdb
+    # 非手动停止时自动重启
+    restart: unless-stopped
+    ports:
+      - "${IOTDB_RPC_PORT:-6667}:6667"
+
+    environment:
+      # ConfigNode 配置
+      cn_internal_address: iotdb
+      cn_internal_port: "10710"
+      cn_consensus_port: "10720"
+      cn_seed_config_node: iotdb:10710
+
+      # DataNode 配置
+      dn_rpc_address: iotdb
+      dn_internal_address: iotdb
+      dn_rpc_port: "6667"
+      dn_internal_port: "10730"
+      dn_mpp_data_exchange_port: "10740"
+      dn_schema_region_consensus_port: "10750"
+      dn_data_region_consensus_port: "10760"
+      dn_seed_config_node: iotdb:10710
+
+      TZ: Asia/Shanghai
+      IOTDB_JVM_HEAP_RS: "-Xms256m -Xmx512m"
+
+    volumes:
+      - iotdb-data:/iotdb/data # 时序数据、WAL，必须持久化
+      # - ./conf:/iotdb/conf # 配置文件持久化，便于运行时调参
+      - ./logs:/iotdb/logs # 映射到宿主机，方便直接查看日志
+
+    healthcheck:
+      # 用 TCP 探测 RPC 端口，比调用 CLI 更轻量
+      test: [ "CMD", "bash", "-c", "cat /dev/null > /dev/tcp/localhost/6667" ]
+      interval: 15s     # 每 15s 探测一次
+      timeout: 5s       # 单次探测超时
+      retries: 5        # 连续失败 5 次才标记为 unhealthy
+      start_period: 60s # 启动阶段宽限期，IoTDB 冷启动较慢
+
+    # IoTDB 停止时需要 flush memtable、写 WAL
+    # 默认 10s 不够，给足时间做清理，避免下次启动时 recover 耗时过长
+    stop_grace_period: 60s
+
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"     # 单个日志文件上限
+        max-file: "3"       # 最多保留 3 个轮转文件，总占用不超过 150m
+        compress: "true"    # 轮转后压缩历史文件，节省磁盘空间
+
+volumes:
+  iotdb-data:
+    name: iotdb-data
