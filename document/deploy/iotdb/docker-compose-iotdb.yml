@@ -3,19 +3,19 @@ services:
     image: apache/iotdb:2.0.6-standalone
     hostname: iotdb
     container_name: iotdb
-    # 非手动停止时自动重启
+    # 异常退出或宿主机重启后自动拉起
     restart: unless-stopped
     ports:
       - "${IOTDB_RPC_PORT:-6667}:6667"
 
     environment:
-      # ConfigNode 配置
+      # ConfigNode 内部通信
       cn_internal_address: iotdb
       cn_internal_port: "10710"
       cn_consensus_port: "10720"
       cn_seed_config_node: iotdb:10710
 
-      # DataNode 配置
+      # DataNode 内部通信及 RPC 服务
       dn_rpc_address: iotdb
       dn_internal_address: iotdb
       dn_rpc_port: "6667"
@@ -26,23 +26,24 @@ services:
       dn_seed_config_node: iotdb:10710
 
       TZ: Asia/Shanghai
-      IOTDB_JVM_HEAP_RS: "-Xms256m -Xmx512m"
+      # IoTDB 内存预算，由启动脚本分配给堆和直接内存
+      MEMORY_SIZE: 512M
 
     volumes:
-      - iotdb-data:/iotdb/data # 时序数据、WAL，必须持久化
-      # - ./conf:/iotdb/conf # 配置文件持久化，便于运行时调参
-      - ./logs:/iotdb/logs # 映射到宿主机，方便直接查看日志
+      - iotdb-data:/iotdb/data # 持久化时序数据和 WAL
+      # 如需高级调参，请挂载与镜像版本一致的完整配置目录
+      # - ./conf:/iotdb/conf
+      - ./logs:/iotdb/logs # 日志映射到宿主机，便于排查
 
     healthcheck:
-      # 用 TCP 探测 RPC 端口，比调用 CLI 更轻量
+      # 轻量探测 RPC 端口，避免启动 CLI
       test: [ "CMD", "bash", "-c", "cat /dev/null > /dev/tcp/localhost/6667" ]
-      interval: 15s     # 每 15s 探测一次
-      timeout: 5s       # 单次探测超时
-      retries: 5        # 连续失败 5 次才标记为 unhealthy
-      start_period: 60s # 启动阶段宽限期，IoTDB 冷启动较慢
+      interval: 15s     # 探测间隔
+      timeout: 5s       # 单次超时
+      retries: 5        # 连续失败阈值
+      start_period: 60s # 冷启动宽限期
 
-    # IoTDB 停止时需要 flush memtable、写 WAL
-    # 默认 10s 不够，给足时间做清理，避免下次启动时 recover 耗时过长
+    # 预留刷盘和 WAL 清理时间，减少异常恢复开销
     stop_grace_period: 60s
 
     ulimits:
@@ -60,9 +61,9 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "50m"     # 单个日志文件上限
-        max-file: "3"       # 最多保留 3 个轮转文件，总占用不超过 150m
-        compress: "true"    # 轮转后压缩历史文件，节省磁盘空间
+        max-size: "50m"  # 单文件上限
+        max-file: "3"    # 最多保留 3 个文件
+        compress: "true" # 压缩轮转日志
 
 volumes:
   iotdb-data:
