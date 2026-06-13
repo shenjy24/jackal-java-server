@@ -3,12 +3,12 @@ insert into `auth_user` (`id`, `nickname`, `avatar`, `account`, `password`) valu
 -- 超级管理员角色
 insert into `auth_role` (`id`, `name`, `remark`) values (1, '超级管理员', '拥有全部权限');
 
--- 权限管理菜单
-insert into `auth_perm` (`id`, `parent_id`, `code`, `name`, `type`, `icon`, `path`, `sort`, `remark`) values
-(101, 0, 'auth:manage', '权限管理', 1, 'setting', '/auth', 1, null),
-(102, 101, 'auth:user', '后台用户管理', 1, 'user', '/auth/user', 1, null),
-(103, 101, 'auth:role', '角色管理', 1, 'team', '/auth/role', 2, null),
-(104, 101, 'auth:perm', '权限管理', 1, 'lock', '/auth/perm', 3, null);
+-- 权限管理菜单（目录节点 component 为空；叶子菜单 component 为相对 src/views 的无扩展名路径）
+insert into `auth_perm` (`id`, `parent_id`, `code`, `name`, `type`, `icon`, `path`, `component`, `sort`, `remark`) values
+(101, 0, 'auth:manage', '权限管理', 1, 'setting', '/auth', null, 1, null),
+(102, 101, 'auth:user', '后台用户管理', 1, 'user', '/auth/user', 'auth/UserManageView', 1, null),
+(103, 101, 'auth:role', '角色管理', 1, 'team', '/auth/role', 'auth/RoleManageView', 2, null),
+(104, 101, 'auth:perm', '权限管理', 1, 'lock', '/auth/perm', 'auth/MenuManageView', 3, null);
 
 -- 后台用户管理按钮
 insert into `auth_perm` (`id`, `parent_id`, `code`, `name`, `type`, `icon`, `path`, `sort`, `remark`) values
