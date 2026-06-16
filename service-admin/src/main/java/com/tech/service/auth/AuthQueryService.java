@@ -165,8 +165,7 @@ public class AuthQueryService {
         return authRoleDao.queryAuthRole(name, pageNum, pageSize);
     }
 
-    public IPage<AuthPermEntity> queryAuthPerm(String code, String name, Integer type, String component,
-                                               Integer pageNum, Integer pageSize) {
-        return authPermDao.queryAuthPerm(code, name, type, component, pageNum, pageSize);
+    public IPage<AuthPermEntity> queryAuthPerm(String code, String name, Integer type, Integer pageNum, Integer pageSize) {
+        return authPermDao.queryAuthPerm(code, name, type, pageNum, pageSize);
     }
 }

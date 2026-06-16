@@ -300,8 +300,7 @@ public class AdminAuthController {
     @Permission(PermCode.PERM_QUERY)
     @PostMapping("/queryAuthPerm")
     public JsonPage<AuthPermVo> queryAuthPerm(@RequestBody AuthPermQueryQo qo) {
-        IPage<AuthPermEntity> page = authQueryService.queryAuthPerm(qo.getCode(), qo.getName(), qo.getType(),
-                qo.getComponent(), qo.getPageNum(), qo.getPageSize());
+        IPage<AuthPermEntity> page = authQueryService.queryAuthPerm(qo.getCode(), qo.getName(), qo.getType(), qo.getPageNum(), qo.getPageSize());
         return new JsonPage<>(page.getTotal(), authAssembler.toAuthPermVo(page.getRecords()));
     }
 

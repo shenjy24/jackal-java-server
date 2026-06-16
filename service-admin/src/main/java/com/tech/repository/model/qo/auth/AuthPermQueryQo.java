@@ -10,5 +10,4 @@ public class AuthPermQueryQo extends PageQo {
     private String code;
     private String name;
     private Integer type;
-    private String component;
 }
