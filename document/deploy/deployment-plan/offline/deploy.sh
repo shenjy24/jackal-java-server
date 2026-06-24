@@ -5,8 +5,8 @@ set -Eeuo pipefail
 # ================= 用法 =================
 # 内网部署只依赖本目录文件和上传的 jar，不依赖仓库源码。
 # 指定模块（可选指定 jar 文件名，缺省时自动匹配 <module>*.jar）：
-#   bash start.sh service-admin
-#   bash start.sh service-client service-client-1.0.0-SNAPSHOT.jar
+#   bash deploy.sh service-admin
+#   bash deploy.sh service-client service-client-1.0.0-SNAPSHOT.jar
 
 # ================= Path =================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,7 +32,7 @@ case "$MODULE" in
     service-admin|service-client) ;;
     *)
         echo "请指定要部署的模块: service-admin 或 service-client"
-        echo "  bash start.sh service-admin"
+        echo "  bash deploy.sh service-admin"
         exit 1
         ;;
 esac
@@ -72,7 +72,7 @@ if [ -z "$JAR_FILE" ]; then
         JAR_FILE="${JAR_FILES[0]}"
     else
         echo "请指定 $MODULE 的 jar 文件，例如："
-        echo "  bash start.sh $MODULE ${MODULE}-1.0.0-SNAPSHOT.jar"
+        echo "  bash deploy.sh $MODULE ${MODULE}-1.0.0-SNAPSHOT.jar"
         echo
         echo "在 $JAR_DIR 中匹配到的 ${MODULE}*.jar：${JAR_FILES[*]:-<无>}"
         exit 1
