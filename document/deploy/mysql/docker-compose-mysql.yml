@@ -13,6 +13,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       # 巧妙注入 MYSQL_PWD 变量：供底下的 healthcheck 隐式读取，避免在 ps 进程中泄露密码
       MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-123456}
+      MYSQL_ROOT_HOST: "%"
 
     volumes:
       # 核心数据持久化目录
