@@ -4,7 +4,7 @@
 
 默认文件名如下：
 
-- `mysql-8.4.tar`
+- `mysql-8.4.10.tar`
 - `eclipse-temurin-21-jre.tar`
 - `nginx-1.30.2.tar`
 
