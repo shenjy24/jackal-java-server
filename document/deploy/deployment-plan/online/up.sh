@@ -5,16 +5,16 @@ set -Eeuo pipefail
 
 # ================= 用法 =================
 # 联网部署（拉取代码 + 多阶段构建）指定要部署的模块：
-#   bash deploy.sh service-admin
-#   bash deploy.sh service-client
+#   bash up.sh service-admin
+#   bash up.sh service-client
 
 # ================= 路径定位 =================
 # 脚本、Dockerfile 和 docker-compose.yml 放在 deploy 目录下，目标仓库目录与 deploy 目录同级。
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ================= 读取配置 =================
-# 如需调整配置，直接修改同目录下的 deploy.env。
-ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/deploy.env}"
+# 如需调整配置，直接修改同目录下的 app.env。
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/app.env}"
 if [ -f "$ENV_FILE" ]; then
     set -a
     . "$ENV_FILE"
@@ -27,7 +27,7 @@ case "$MODULE" in
     service-admin|service-client) ;;
     *)
         echo "请指定要部署的模块: service-admin 或 service-client"
-        echo "  bash deploy.sh service-admin"
+        echo "  bash up.sh service-admin"
         exit 1
         ;;
 esac

@@ -17,7 +17,7 @@ resolve_deploy_path() {
 }
 
 # ================= Load config =================
-ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/deploy.env}"
+ENV_FILE="${ENV_FILE:-$SCRIPT_DIR/app.env}"
 if [ -f "$ENV_FILE" ]; then
     set -a
     . "$ENV_FILE"
