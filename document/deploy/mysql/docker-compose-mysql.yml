@@ -1,6 +1,6 @@
 services:
   mysql-service:
-    image: mysql:8.4
+    image: mysql:8.4.10
     container_name: mysql
     restart: unless-stopped
     ports:
@@ -11,8 +11,7 @@ services:
       TZ: Asia/Shanghai
       # Root 账号密码
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
-      # 巧妙注入 MYSQL_PWD 变量：供底下的 healthcheck 隐式读取，避免在 ps 进程中泄露密码
-      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-123456}
+      MYSQL_ROOT_HOST: "%"
 
     volumes:
       # 核心数据持久化目录
@@ -27,8 +26,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
     healthcheck:
-      # 健康检查：显式指定 -uroot，密码会自动从 environment 的 MYSQL_PWD 读取
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "--silent"]
+      # 健康检查：仅在检查命令内临时注入密码，避免 MYSQL_PWD 干扰 MySQL 首次初始化
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h localhost -uroot --silent"]
       interval: 10s       # 每 10 秒检查一次
       timeout: 5s         # 检查超时时间 5 秒
       retries: 5          # 连续 5 次失败则判定为不健康
