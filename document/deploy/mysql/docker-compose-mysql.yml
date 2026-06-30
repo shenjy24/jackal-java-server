@@ -11,7 +11,6 @@ services:
       TZ: Asia/Shanghai
       # Root 账号密码
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
-      MYSQL_ROOT_HOST: "%"
 
     volumes:
       # 核心数据持久化目录
