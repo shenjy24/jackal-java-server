@@ -28,13 +28,9 @@ services:
       TZ: Asia/Shanghai
       # IoTDB 内存预算，由启动脚本分配给堆和直接内存
       # DataNode
-      IOTDB_JMX_OPTS: >-
-        -Xms256M -Xmx384M
-        -XX:MaxDirectMemorySize=128M
+      IOTDB_JMX_OPTS: "${APP_IOTDB_JMX_OPTS:--Xms256M -Xmx384M -XX:MaxDirectMemorySize=128M}"
       # ConfigNode
-      CONFIGNODE_JMX_OPTS: >-
-        -Xms128M -Xmx192M
-        -XX:MaxDirectMemorySize=64M
+      CONFIGNODE_JMX_OPTS: "${APP_CONFIGNODE_JMX_OPTS:--Xms128M -Xmx192M -XX:MaxDirectMemorySize=64M}"
 
     volumes:
       - iotdb-data:/iotdb/data # 持久化时序数据和 WAL
@@ -61,9 +57,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: ${APP_MEMORY_LIMIT:-1G}
         reservations:
-          memory: 768M
+          memory: ${APP_MEMORY_RESERVATION:-768M}
 
     logging:
       driver: "json-file"

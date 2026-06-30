@@ -19,11 +19,11 @@ services:
       # 核心数据持久化目录
       - mysql-data:/var/lib/mysql
       # 挂载自定义配置文件（增加 :ro 设为只读，提升安全性）
-      - ./mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./conf.d:/etc/mysql/conf.d:ro
       # 首次启动时的初始化 SQL 脚本目录（仅在数据目录为空时执行一次）
-      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ./init:/docker-entrypoint-initdb.d
       # 将慢查询、错误日志映射到宿主机，方便排查问题
-      - ./mysql/logs:/var/log/mysql
+      - ./logs:/var/log/mysql
       # 挂载宿主机时区文件，确保容器内部 OS 的系统日志与宿主机时间分秒不差
       - /etc/localtime:/etc/localtime:ro
 
@@ -42,10 +42,10 @@ services:
       resources:
         # 硬限制 (上限)：当 MySQL 内存飙升碰到 512M 时，Docker 会直接 Kill 重启它，保护宿主机不死
         limits:
-          memory: 512M
+          memory: ${APP_MEMORY_LIMIT:-512M}
         # 软限制 (保底)：告知系统此容器日常运行约需 215M，方便集群调度
         reservations:
-          memory: 215M
+          memory: ${APP_MEMORY_RESERVATION:-215M}
 
     logging:
       driver: "json-file"
