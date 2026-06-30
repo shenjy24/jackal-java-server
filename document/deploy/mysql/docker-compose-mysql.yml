@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     ports:
       - "${MYSQL_PORT:-3306}:3306"
+    # 指定以当前宿主机用户的 UID 和 GID 运行容器
+    # 如果系统未设置环境变量，则默认使用 1000 (大多数 Linux 系统的主用户)
+    user: "${UID:-1000}:${GID:-1000}"
 
     environment:
       # 容器操作系统级别的时区设置
