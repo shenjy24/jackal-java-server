@@ -5,9 +5,6 @@ services:
     restart: unless-stopped
     ports:
       - "${MYSQL_PORT:-3306}:3306"
-    # 指定以当前宿主机用户的 UID 和 GID 运行容器
-    # 如果系统未设置环境变量，则默认使用 1000 (大多数 Linux 系统的主用户)
-    user: "${UID:-1000}:${GID:-1000}"
 
     environment:
       # 容器操作系统级别的时区设置
@@ -21,11 +18,7 @@ services:
       # 挂载自定义配置文件（增加 :ro 设为只读，提升安全性）
       - ./conf.d:/etc/mysql/conf.d:ro
       # 首次启动时的初始化 SQL 脚本目录（仅在数据目录为空时执行一次）
-      - ./init:/docker-entrypoint-initdb.d
-      # 将慢查询、错误日志映射到宿主机，方便排查问题
-      - ./logs:/var/log/mysql
-      # 挂载宿主机时区文件，确保容器内部 OS 的系统日志与宿主机时间分秒不差
-      - /etc/localtime:/etc/localtime:ro
+      - ./init:/docker-entrypoint-initdb.d:ro
 
     healthcheck:
       # 健康检查：仅在检查命令内临时注入密码，避免 MYSQL_PWD 干扰 MySQL 首次初始化
