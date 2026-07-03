@@ -5,25 +5,30 @@ services:
     container_name: iotdb
     # 异常退出或宿主机重启后自动拉起
     restart: unless-stopped
-    ports:
-      - "${IOTDB_RPC_PORT:-6667}:6667"
+    # ports:
+    #  - "${IOTDB_RPC_PORT:-6667}:6667"
+
+    # 使用宿主机网络，不再配置 ports
+    network_mode: host
 
     environment:
       # ConfigNode 内部通信
-      cn_internal_address: iotdb
+      cn_internal_address: 127.0.0.1
       cn_internal_port: "10710"
       cn_consensus_port: "10720"
-      cn_seed_config_node: iotdb:10710
+      cn_seed_config_node: 127.0.0.1:10710
 
       # DataNode 内部通信及 RPC 服务
-      dn_rpc_address: iotdb
-      dn_internal_address: iotdb
+      # 对外RPC地址必须是客户端能够访问的宿主机地址
+      dn_rpc_address: ${DN_RPC_ADDRESS:-127.0.0.1}
       dn_rpc_port: "6667"
+      # 单机内部通信
+      dn_internal_address: 127.0.0.1
       dn_internal_port: "10730"
       dn_mpp_data_exchange_port: "10740"
       dn_schema_region_consensus_port: "10750"
       dn_data_region_consensus_port: "10760"
-      dn_seed_config_node: iotdb:10710
+      dn_seed_config_node: 127.0.0.1:10710
 
       TZ: Asia/Shanghai
       # IoTDB 内存预算，由启动脚本分配给堆和直接内存
