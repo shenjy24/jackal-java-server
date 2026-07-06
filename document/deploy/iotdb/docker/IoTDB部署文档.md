@@ -22,22 +22,32 @@ IoTDB 数据使用固定 Docker volume `iotdb-data` 持久化，容器删除后�
 cd doc/deploy/iotdb
 ```
 
-如需覆盖默认端口，可在当前目录新增 `.env` 文件：
+如需覆盖默认端口或绑定地址，可直接修改当前目录下的 `app.env` 文件：
 
 ```env
+IOTDB_BIND_IP=0.0.0.0
 IOTDB_RPC_PORT=6667
+DN_RPC_ADDRESS=0.0.0.0
 ```
 
 变量说明：
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
+| `IOTDB_BIND_IP` | `0.0.0.0` | 宿主机监听地址，外部访问需要保持为 `0.0.0.0` 或指定可访问 IP |
 | `IOTDB_RPC_PORT` | `6667` | 宿主机映射端口，应用通过该端口访问 IoTDB |
+| `DN_RPC_ADDRESS` | `0.0.0.0` | DataNode RPC 容器内监听地址，bridge 网络下不建议写宿主机 IP |
+
+外部客户端连接时使用宿主机 IP 和映射端口，例如：
+
+```bash
+/iotdb/sbin/start-cli.sh -h 192.168.1.10 -p 6667 -u root -pw root
+```
 
 启动 IoTDB：
 
 ```bash
-docker compose -f docker-compose-iotdb.yml up -d
+bash up.sh
 ```
 
 查看容器状态：

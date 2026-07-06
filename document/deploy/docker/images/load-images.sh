@@ -4,8 +4,7 @@ set -Eeuo pipefail
 
 # ================= Path =================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGE_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
-cd "$PACKAGE_ROOT"
+cd "$SCRIPT_DIR"
 
 # ================= Load config =================
 IMAGES_ENV_FILE="${IMAGES_ENV_FILE:-$SCRIPT_DIR/images.env}"

@@ -5,11 +5,8 @@ services:
     container_name: iotdb
     # 异常退出或宿主机重启后自动拉起
     restart: unless-stopped
-    # ports:
-    #  - "${IOTDB_RPC_PORT:-6667}:6667"
-
-    # 使用宿主机网络，不再配置 ports
-    network_mode: host
+    ports:
+      - "${IOTDB_BIND_IP:-0.0.0.0}:${IOTDB_RPC_PORT:-6667}:6667"
 
     environment:
       # ConfigNode 内部通信
@@ -19,8 +16,8 @@ services:
       cn_seed_config_node: 127.0.0.1:10710
 
       # DataNode 内部通信及 RPC 服务
-      # 对外RPC地址必须是客户端能够访问的宿主机地址
-      dn_rpc_address: ${DN_RPC_ADDRESS:-127.0.0.1}
+      # bridge 网络下用于容器内监听，不建议写宿主机 IP
+      dn_rpc_address: ${DN_RPC_ADDRESS:-0.0.0.0}
       dn_rpc_port: "6667"
       # 单机内部通信
       dn_internal_address: 127.0.0.1
