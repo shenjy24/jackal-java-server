@@ -17,6 +17,8 @@ services:
       - mysql-data:/var/lib/mysql
       # 挂载自定义配置文件（增加 :ro 设为只读，提升安全性）
       - ./conf.d:/etc/mysql/conf.d:ro
+      # 挂载 MySQL 错误日志和慢查询日志，便于宿主机排查与留存
+      - ./logs:/var/log/mysql
       # 首次启动时的初始化 SQL 脚本目录（仅在数据目录为空时执行一次）
       - ./init:/docker-entrypoint-initdb.d:ro
 
