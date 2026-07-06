@@ -6,7 +6,7 @@ services:
     # 异常退出或宿主机重启后自动拉起
     restart: unless-stopped
     ports:
-      - "${IOTDB_BIND_IP:-0.0.0.0}:${IOTDB_RPC_PORT:-6667}:6667"
+      - "6667:6667"
 
     environment:
       # ConfigNode 内部通信
