@@ -1,6 +1,6 @@
 services:
   app-server:
-    image: ${APP_IMAGE:-service-client:prod}
+    image: ${APP_IMAGE:-service-client:prod-placeholder}
     container_name: ${APP_CONTAINER_NAME:-service-client-prod}
     pull_policy: never
     restart: unless-stopped

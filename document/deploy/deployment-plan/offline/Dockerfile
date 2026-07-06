@@ -1,4 +1,6 @@
-FROM eclipse-temurin:21-jre
+ARG RUNTIME_IMAGE=eclipse-temurin:21-jre
+
+FROM ${RUNTIME_IMAGE}
 
 ARG APP_UID=1000
 ARG APP_GID=1000
