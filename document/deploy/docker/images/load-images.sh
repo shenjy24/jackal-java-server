@@ -26,8 +26,14 @@ NGINX_IMAGE="${NGINX_IMAGE:-nginx:1.30.2}"
 NGINX_IMAGE_TAR="${NGINX_IMAGE_TAR:-$IMAGE_DIR/nginx-1.30.2.tar}"
 
 load_image() {
-    local image_tar="$1"
-    local label="$2"
+    local image="$1"
+    local image_tar="$2"
+    local label="$3"
+
+    if docker image inspect "$image" >/dev/null 2>&1; then
+        echo "${label}镜像已存在，跳过加载: $image"
+        return
+    fi
 
     if [ ! -f "$image_tar" ]; then
         echo "未找到${label}镜像文件: $image_tar"
@@ -38,16 +44,16 @@ load_image() {
     docker load -i "$image_tar"
 }
 
-load_image "$MYSQL_IMAGE_TAR" "MySQL"
+load_image "$MYSQL_IMAGE" "$MYSQL_IMAGE_TAR" "MySQL"
 
 if [ "$LOAD_RUNTIME_IMAGE" = "1" ]; then
-    load_image "$RUNTIME_IMAGE_TAR" "Java 运行时"
+    load_image "$RUNTIME_IMAGE" "$RUNTIME_IMAGE_TAR" "Java 运行时"
 else
     echo "跳过 Java 运行时镜像加载，LOAD_RUNTIME_IMAGE=$LOAD_RUNTIME_IMAGE"
 fi
 
 if [ "$LOAD_NGINX_IMAGE" = "1" ]; then
-    load_image "$NGINX_IMAGE_TAR" "Nginx"
+    load_image "$NGINX_IMAGE" "$NGINX_IMAGE_TAR" "Nginx"
 else
     echo "跳过 Nginx 镜像加载，LOAD_NGINX_IMAGE=$LOAD_NGINX_IMAGE"
 fi
