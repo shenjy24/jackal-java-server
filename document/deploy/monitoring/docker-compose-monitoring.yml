@@ -13,6 +13,12 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
+    deploy:
+      resources:
+        limits:
+          memory: ${PROMETHEUS_MEMORY_LIMIT:-1G}
+        reservations:
+          memory: ${PROMETHEUS_MEMORY_RESERVATION:-512M}
     networks:
       - rd_net
 
@@ -28,6 +34,12 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
     volumes:
       - grafana-data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          memory: ${GRAFANA_MEMORY_LIMIT:-512M}
+        reservations:
+          memory: ${GRAFANA_MEMORY_RESERVATION:-256M}
     networks:
       - rd_net
     depends_on:
@@ -44,6 +56,12 @@ services:
       - "${NODE_EXPORTER_PORT:-9100}:9100"
     volumes:
       - /:/host:ro,rslave
+    deploy:
+      resources:
+        limits:
+          memory: ${NODE_EXPORTER_MEMORY_LIMIT:-128M}
+        reservations:
+          memory: ${NODE_EXPORTER_MEMORY_RESERVATION:-64M}
     networks:
       - rd_net
 
@@ -62,6 +80,12 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
+    deploy:
+      resources:
+        limits:
+          memory: ${CADVISOR_MEMORY_LIMIT:-512M}
+        reservations:
+          memory: ${CADVISOR_MEMORY_RESERVATION:-256M}
     networks:
       - rd_net
 
