@@ -1,0 +1,76 @@
+services:
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v3.13.0}
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-15d}
+      - --web.enable-lifecycle
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - rd_net
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:13.1.0}
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      TZ: Asia/Shanghai
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - rd_net
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: ${NODE_EXPORTER_IMAGE:-prom/node-exporter:v1.11.1}
+    container_name: node-exporter
+    restart: unless-stopped
+    pid: host
+    command:
+      - --path.rootfs=/host
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - rd_net
+
+  cadvisor:
+    image: ${CADVISOR_IMAGE:-ghcr.io/google/cadvisor:0.60.3}
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    ports:
+      - "${CADVISOR_PORT:-8081}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - rd_net
+
+volumes:
+  prometheus-data:
+    name: prometheus-data
+  grafana-data:
+    name: grafana-data
+
+networks:
+  rd_net:
+    external: true
