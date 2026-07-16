@@ -1,0 +1,268 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" }
+  ],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "1. 业务读写频率 (Operations) - 吞吐量基准",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (nodeId) (rate(entry_seconds_count{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", name=~\"(?i).*insert.*\"}[1m]))",
+          "legendFormat": "Node-{{nodeId}} 写入请求/秒"
+        }
+      ],
+      "title": "业务写入吞吐 (Write Request QPS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (nodeId) (rate(entry_seconds_count{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", name=~\"(?i).*executeQuery.*\"}[1m]))",
+          "legendFormat": "Node-{{nodeId}} 查询请求/秒"
+        }
+      ],
+      "title": "业务查询吞吐 (Query Request QPS)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 200,
+      "panels": [],
+      "title": "2. 计算与内存瓶颈 (CPU & Memory)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 20 } } },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 10 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "process_cpu_load{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"} * 100",
+          "legendFormat": "Node-{{nodeId}} CPU负载"
+        }
+      ],
+      "title": "节点 CPU 负载 (近 100% 为瓶颈)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "lineWidth": 2, "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 10 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "process_used_mem{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}",
+          "legendFormat": "Node-{{nodeId}} OS已用内存"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "process_max_mem{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}",
+          "legendFormat": "Node-{{nodeId}} 进程分配上限"
+        }
+      ],
+      "title": "系统级内存监控 (OS Level)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "lineWidth": 2, "fillOpacity": 20 } } },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "jvm_memory_used_bytes{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", id=~\"G1 Old Gen.*|CMS Old Gen.*\"}",
+          "legendFormat": "Node-{{nodeId}} 已用老年代(Old Gen)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "jvm_memory_max_bytes{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", id=~\"G1 Old Gen.*|CMS Old Gen.*\"}",
+          "legendFormat": "Node-{{nodeId}} 老年代上限"
+        }
+      ],
+      "title": "JVM 堆内存诊断 (触顶引发 Full GC)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "id": 300,
+      "panels": [],
+      "title": "3. 垃圾回收瓶颈 (Garbage Collection)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "lineWidth": 2, "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (nodeId, cause) (rate(jvm_gc_pause_seconds_count{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}[1m]))",
+          "legendFormat": "Node-{{nodeId}} 原因: {{cause}}"
+        }
+      ],
+      "title": "GC 触发频率 (包含 Full GC 排查)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 30 }, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 2 }, { "color": "red", "value": 5 } ] } } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (nodeId) (rate(jvm_gc_pause_seconds_sum{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}[1m])) * 100",
+          "legendFormat": "Node-{{nodeId}} 业务停顿占比"
+        }
+      ],
+      "title": "GC 造成的系统卡顿占比 (> 5% 为严重瓶颈)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 400,
+      "panels": [],
+      "title": "4. 磁盘 IO 瓶颈 (Disk I/O Bottlenecks)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 20 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 } ] } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "disk_io_busy_percentage{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"} * 100",
+          "legendFormat": "Node-{{nodeId}} 磁盘 {{disk_id}}"
+        }
+      ],
+      "title": "磁盘繁忙度 (Busy % - 持续 >80% 为瓶颈)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 15 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "disk_io_avg_queue_size{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}",
+          "legendFormat": "Node-{{nodeId}} 队列 {{disk_id}}"
+        }
+      ],
+      "title": "IO 请求等待队列长度 (持续 >1 说明严重积压)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "lineWidth": 1, "fillOpacity": 10 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "rate(disk_io_ops{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", type=\"write\"}[$__rate_interval])",
+          "legendFormat": "Node-{{nodeId}} {{disk_id}} 写 (Write)"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "rate(disk_io_ops{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\", type=\"read\"}[$__rate_interval])",
+          "legendFormat": "Node-{{nodeId}} {{disk_id}} 读 (Read)"
+        }
+      ],
+      "title": "磁盘 IOPS 负载状态",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "lineWidth": 2, "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (name, nodeId) (compaction_task_count{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"})",
+          "legendFormat": "Node-{{nodeId}} 合并任务: {{name}}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "expr": "sum by (type, nodeId) (rate(flush_memtable_count_total{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\", nodeId=~\"$nodeId\"}[1m]))",
+          "legendFormat": "Node-{{nodeId}} 刷盘触发: {{type}}"
+        }
+      ],
+      "title": "导致 IO 瓶颈的后台嫌疑人 (合并与刷盘)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["iotdb", "cluster", "bottleneck", "2.0"],
+  "templating": {
+    "list": [
+      { "current": {}, "hide": 0, "label": "集群", "name": "cluster", "query": "label_values(process_cpu_load{job=\"iotdb\"}, cluster)", "refresh": 1, "type": "query", "includeAll": true, "multi": true },
+      { "current": {}, "hide": 0, "label": "节点类型", "name": "nodeType", "query": "label_values(process_cpu_load{job=\"iotdb\", cluster=~\"$cluster\"}, nodeType)", "refresh": 1, "type": "query", "includeAll": true, "multi": true },
+      { "current": {}, "hide": 0, "label": "节点 ID", "name": "nodeId", "query": "label_values(process_cpu_load{job=\"iotdb\", cluster=~\"$cluster\", nodeType=~\"(?i)$nodeType\"}, nodeId)", "refresh": 1, "type": "query", "includeAll": true, "multi": true }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "IoTDB 2.0 性能与全链路瓶颈监控",
+  "uid": "iotdb-2-0-bottleneck-overview",
+  "version": 3
+}

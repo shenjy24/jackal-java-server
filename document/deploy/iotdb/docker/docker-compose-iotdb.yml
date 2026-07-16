@@ -7,26 +7,10 @@ services:
     restart: unless-stopped
     ports:
       - "6667:6667"
+      - "9091:9091"
+      - "9092:9092"
 
     environment:
-      # ConfigNode 内部通信
-      cn_internal_address: 127.0.0.1
-      cn_internal_port: "10710"
-      cn_consensus_port: "10720"
-      cn_seed_config_node: 127.0.0.1:10710
-
-      # DataNode 内部通信及 RPC 服务
-      # bridge 网络下用于容器内监听，不建议写宿主机 IP
-      dn_rpc_address: ${DN_RPC_ADDRESS:-0.0.0.0}
-      dn_rpc_port: "6667"
-      # 单机内部通信
-      dn_internal_address: 127.0.0.1
-      dn_internal_port: "10730"
-      dn_mpp_data_exchange_port: "10740"
-      dn_schema_region_consensus_port: "10750"
-      dn_data_region_consensus_port: "10760"
-      dn_seed_config_node: 127.0.0.1:10710
-
       TZ: Asia/Shanghai
       # IoTDB 内存预算，由启动脚本分配给堆和直接内存
       # DataNode
@@ -36,8 +20,8 @@ services:
 
     volumes:
       - iotdb-data:/iotdb/data # 持久化时序数据和 WAL
-      # 如需高级调参，请挂载与镜像版本一致的完整配置目录
-      # - ./conf:/iotdb/conf
+      # 挂载 IoTDB 系统配置文件，避免性能参数依赖镜像环境变量注入逻辑
+      - ./iotdb-system.properties:/iotdb/conf/iotdb-system.properties:ro
       - ./logs:/iotdb/logs # 日志映射到宿主机，便于排查
 
     healthcheck:

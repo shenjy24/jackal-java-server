@@ -17,3 +17,10 @@ scrape_configs:
     static_configs:
       - targets:
           - cadvisor:8080
+
+  - job_name: iotdb
+    honor_labels: true
+    static_configs:
+      - targets:
+          - host.docker.internal:9091
+          - host.docker.internal:9092

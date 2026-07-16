@@ -71,6 +71,35 @@ docker compose -f docker-compose-iotdb.yml down
 docker compose -f docker-compose-iotdb.yml down -v
 ```
 
+## Prometheus 监控
+
+当前部署通过 `iotdb-system.properties` 开启 IoTDB 内部 Prometheus 指标：
+
+```properties
+cn_metric_reporter_list=PROMETHEUS
+dn_metric_reporter_list=PROMETHEUS
+cn_metric_prometheus_reporter_port=9091
+dn_metric_prometheus_reporter_port=9092
+```
+
+`docker-compose-iotdb.yml` 会将 IoTDB metrics 端口映射到宿主机：
+
+```text
+9091: ConfigNode metrics
+9092: DataNode metrics
+```
+
+Prometheus 配置位于 `document/deploy/monitoring/prometheus/prometheus.yml`，其中 `iotdb` job 默认通过宿主机地址抓取：
+
+```text
+host.docker.internal:9091
+host.docker.internal:9092
+```
+
+如果服务器 Docker 环境不支持 `host.docker.internal`，请改为实际宿主机 IP，例如 `192.168.1.10:9091` 和 `192.168.1.10:9092`。
+
+启动或重启 IoTDB 与监控栈后，在 Prometheus 页面 `Status -> Targets` 中确认 `iotdb` job 为 `UP`。
+
 ## 初始化数据库
 
 应用配置中使用的 IoTDB 数据库需要提前创建。进入 IoTDB CLI：
