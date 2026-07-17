@@ -1,0 +1,161 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "CPU Usage (Busy / User / System / IOWait)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])) * 100)", "legendFormat": "CPU Busy (%)" },
+        { "expr": "avg by(instance) (rate(node_cpu_seconds_total{mode=\"user\"}[$__rate_interval])) * 100", "legendFormat": "User (%)" },
+        { "expr": "avg by(instance) (rate(node_cpu_seconds_total{mode=\"system\"}[$__rate_interval])) * 100", "legendFormat": "System (%)" },
+        { "expr": "avg by(instance) (rate(node_cpu_seconds_total{mode=\"iowait\"}[$__rate_interval])) * 100", "legendFormat": "IOWait (%)" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" } }
+    },
+    {
+      "title": "Load Average (1/5/15)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "node_load1", "legendFormat": "1m Load" },
+        { "expr": "node_load5", "legendFormat": "5m Load" },
+        { "expr": "node_load15", "legendFormat": "15m Load" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "Memory Used & Available",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes", "legendFormat": "Memory Used" },
+        { "expr": "node_memory_MemAvailable_bytes", "legendFormat": "Memory Available" },
+        { "expr": "node_memory_MemTotal_bytes", "legendFormat": "Memory Total" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "title": "Swap Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes", "legendFormat": "Swap Used" },
+        { "expr": "node_memory_SwapFree_bytes", "legendFormat": "Swap Free" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "title": "Disk IOPS (Reads/Writes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "rate(node_disk_reads_completed_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Read IOPS - {{device}}" },
+        { "expr": "rate(node_disk_writes_completed_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Write IOPS - {{device}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "iops" } }
+    },
+    {
+      "title": "Disk Throughput (MB/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "rate(node_disk_read_bytes_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Read - {{device}}" },
+        { "expr": "rate(node_disk_written_bytes_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Write - {{device}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
+    },
+    {
+      "title": "Disk Await (Latency)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "rate(node_disk_read_time_seconds_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval]) / rate(node_disk_reads_completed_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Read Await - {{device}}" },
+        { "expr": "rate(node_disk_write_time_seconds_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval]) / rate(node_disk_writes_completed_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Write Await - {{device}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "title": "Disk Util & Queue",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "rate(node_disk_io_time_seconds_total{device=~\"[a-z]+[0-9]*\"}[$__rate_interval])", "legendFormat": "Utilization - {{device}}" },
+        { "expr": "node_disk_io_now{device=~\"[a-z]+[0-9]*\"}", "legendFormat": "IO Queue - {{device}}" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit" },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": ".*Queue.*" }, "properties": [ { "id": "unit", "value": "short" } ] }
+        ]
+      }
+    },
+    {
+      "title": "Network Traffic (RX/TX)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean", "min", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }
+      },
+      "targets": [
+        { "expr": "rate(node_network_receive_bytes_total{device!~\"lo\"}[$__rate_interval])", "legendFormat": "RX - {{device}}" },
+        { "expr": "rate(node_network_transmit_bytes_total{device!~\"lo\"}[$__rate_interval])", "legendFormat": "TX - {{device}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps" } }
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["node_exporter", "linux"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Node Exporter Essential Metrics"
+}
