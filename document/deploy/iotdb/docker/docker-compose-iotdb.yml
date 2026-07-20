@@ -9,7 +9,8 @@ services:
       - "6667:6667"
       - "9091:9091"
       - "9092:9092"
-
+    networks:
+      - tech_net
     environment:
       TZ: Asia/Shanghai
       # IoTDB 内存预算，由启动脚本分配给堆和直接内存
@@ -57,3 +58,7 @@ services:
 volumes:
   iotdb-data:
     name: iotdb-data
+
+networks:
+  tech_net:
+    external: true

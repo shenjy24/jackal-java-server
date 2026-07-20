@@ -20,7 +20,7 @@ services:
         reservations:
           memory: ${PROMETHEUS_MEMORY_RESERVATION:-512M}
     networks:
-      - rd_net
+      - tech_net
 
   grafana:
     image: ${GRAFANA_IMAGE:-grafana/grafana:13.1.0}
@@ -41,7 +41,7 @@ services:
         reservations:
           memory: ${GRAFANA_MEMORY_RESERVATION:-256M}
     networks:
-      - rd_net
+      - tech_net
     depends_on:
       - prometheus
 
@@ -63,7 +63,7 @@ services:
         reservations:
           memory: ${NODE_EXPORTER_MEMORY_RESERVATION:-64M}
     networks:
-      - rd_net
+      - tech_net
 
   cadvisor:
     image: ${CADVISOR_IMAGE:-ghcr.io/google/cadvisor:0.60.3}
@@ -87,7 +87,7 @@ services:
         reservations:
           memory: ${CADVISOR_MEMORY_RESERVATION:-256M}
     networks:
-      - rd_net
+      - tech_net
 
 volumes:
   prometheus-data:
@@ -96,5 +96,5 @@ volumes:
     name: grafana-data
 
 networks:
-  rd_net:
+  tech_net:
     external: true

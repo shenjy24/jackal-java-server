@@ -5,7 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "${MYSQL_PORT:-3306}:3306"
-
+    networks:
+      - tech_net
     environment:
       # 容器操作系统级别的时区设置
       TZ: Asia/Shanghai
@@ -18,7 +19,7 @@ services:
       # 挂载自定义配置文件（增加 :ro 设为只读，提升安全性）
       - ./conf.d:/etc/mysql/conf.d:ro
       # 挂载 MySQL 错误日志和慢查询日志，便于宿主机排查与留存
-      - ./logs:/var/log/mysql
+      - ./logs:/var/log/mysql:ro
       # 首次启动时的初始化 SQL 脚本目录（仅在数据目录为空时执行一次）
       - ./init:/docker-entrypoint-initdb.d:ro
 
@@ -52,3 +53,7 @@ services:
 volumes:
   mysql-data:
     name: mysql-data
+
+networks:
+  tech_net:
+    external: true
