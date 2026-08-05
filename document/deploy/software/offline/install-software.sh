@@ -2,19 +2,23 @@
 
 set -Eeuo pipefail
 
-# Offline bootstrap script for Git, Docker Engine and Docker Compose.
+# Offline bootstrap script for Docker Engine and Docker Compose.
 # Put required packages under ./pkgs by default.
 
 TECH_USER="${TECH_USER:-tech}"
 PKG_DIR="${PKG_DIR:-pkgs}"
-GIT_ARCHIVE="${GIT_ARCHIVE:-git-binaries.linux-64bit.tar.gz}"
 DOCKER_ARCHIVE="${DOCKER_ARCHIVE:-docker-29.5.3.tgz}"
 DOCKER_COMPOSE_BINARY="${DOCKER_COMPOSE_BINARY:-docker-compose-linux-x86_64}"
+DOCKER_NETWORK_NAME="${DOCKER_NETWORK_NAME:-rd_net}"
+IPTABLES_DEB_DIR="${IPTABLES_DEB_DIR:-$PKG_DIR}"
+IPTABLES_DEB="${IPTABLES_DEB:-iptables_1.8.7-1ubuntu5.2_amd64.deb}"
 
 INSTALL_PREFIX="${INSTALL_PREFIX:-/usr/local}"
 OPT_DIR="${OPT_DIR:-/opt}"
 DOCKER_BIN_DIR="${DOCKER_BIN_DIR:-$INSTALL_PREFIX/bin}"
 DOCKER_COMPOSE_PLUGIN_DIR="${DOCKER_COMPOSE_PLUGIN_DIR:-$INSTALL_PREFIX/lib/docker/cli-plugins}"
+DOCKER_BACKUP_DIR="${DOCKER_BACKUP_DIR:-$OPT_DIR/rd300-backups/docker}"
+ROLLBACK_DOCKER="${ROLLBACK_DOCKER:-0}"
 
 SUDO=""
 if [ "$(id -u)" -ne 0 ]; then
@@ -63,6 +67,64 @@ group_exists() {
   fi
 }
 
+is_ubuntu_2204() {
+  if [ ! -r /etc/os-release ]; then
+    return 1
+  fi
+
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  [ "${ID:-}" = "ubuntu" ] && [ "${VERSION_ID:-}" = "22.04" ]
+}
+
+install_iptables_if_missing() {
+  if command_exists iptables; then
+    log "iptables 已存在，跳过离线安装"
+    iptables --version
+    return
+  fi
+
+  log "未检测到 iptables，开始离线安装"
+  if ! is_ubuntu_2204; then
+    echo "当前脚本内置的 iptables 离线包仅适用于 Ubuntu 22.04；当前系统不匹配，请准备对应发行版的软件包。" >&2
+    exit 1
+  fi
+
+  require_command dpkg
+  require_command dpkg-deb
+  require_file "$IPTABLES_DEB_DIR/$IPTABLES_DEB" "iptables 主安装包"
+
+  local system_arch package_arch package_name
+  system_arch="$(dpkg --print-architecture)"
+  package_arch="$(dpkg-deb -f "$IPTABLES_DEB_DIR/$IPTABLES_DEB" Architecture)"
+  package_name="$(dpkg-deb -f "$IPTABLES_DEB_DIR/$IPTABLES_DEB" Package)"
+  if [ "$package_name" != "iptables" ]; then
+    echo "iptables 主安装包不正确: $IPTABLES_DEB_DIR/$IPTABLES_DEB" >&2
+    exit 1
+  fi
+  if [ "$package_arch" != "all" ] && [ "$package_arch" != "$system_arch" ]; then
+    echo "iptables 安装包架构不匹配：服务器为 $system_arch，安装包为 $package_arch" >&2
+    exit 1
+  fi
+
+  local deb_packages=()
+  shopt -s nullglob
+  deb_packages=("$IPTABLES_DEB_DIR"/*.deb)
+  shopt -u nullglob
+  if [ "${#deb_packages[@]}" -eq 0 ]; then
+    echo "未在 $IPTABLES_DEB_DIR 找到任何 .deb 依赖包。" >&2
+    exit 1
+  fi
+
+  # 目录内可同时放入 iptables 及其依赖包；dpkg 会在一次调用中完成解包和依赖配置。
+  $SUDO dpkg -i "${deb_packages[@]}"
+  if ! command_exists iptables; then
+    echo "iptables 离线安装后仍不可用，请补齐 $IPTABLES_DEB_DIR 中缺失的依赖 .deb 包。" >&2
+    exit 1
+  fi
+  iptables --version
+}
+
 create_tech_user() {
   log "创建用户: $TECH_USER"
   if id "$TECH_USER" >/dev/null 2>&1; then
@@ -85,29 +147,81 @@ create_tech_user() {
   fi
 }
 
-install_git() {
-  local archive_path="$1"
-  log "安装 Git: $archive_path"
+docker_binaries_match() {
+  local source_dir="$1"
+  local source_file target_file
+  for source_file in "$source_dir"/*; do
+    [ -f "$source_file" ] || continue
+    target_file="$DOCKER_BIN_DIR/$(basename "$source_file")"
+    if [ ! -f "$target_file" ] || ! cmp -s "$source_file" "$target_file"; then
+      return 1
+    fi
+  done
+  return 0
+}
 
-  require_file "$archive_path" "Git 离线包"
-  require_command tar
-
-  local tmp_dir
-  tmp_dir="$(mktemp -d)"
-
-  tar -xzf "$archive_path" -C "$tmp_dir"
-
-  if [ ! -f "$tmp_dir/git" ]; then
-    echo "Git 离线包结构不符合预期，未找到顶层 git 文件: $archive_path" >&2
-    exit 1
+stop_docker_services() {
+  if ! command_exists systemctl; then
+    return
   fi
 
-  $SUDO mkdir -p "$INSTALL_PREFIX/bin"
-  $SUDO cp "$tmp_dir"/git* "$INSTALL_PREFIX/bin"/
-  $SUDO chmod 0755 "$INSTALL_PREFIX/bin"/git*
+  log "停止 Docker/containerd，以便安全更新二进制"
+  $SUDO systemctl stop docker.service 2>/dev/null || true
+  $SUDO systemctl stop containerd.service 2>/dev/null || true
+}
 
-  "$INSTALL_PREFIX/bin/git" --version
-  rm -rf "$tmp_dir"
+ensure_containerd_not_in_use() {
+  local process_dir executable_path
+  for process_dir in /proc/[0-9]*; do
+    [ -e "$process_dir/exe" ] || continue
+    executable_path="$(readlink -f "$process_dir/exe" 2>/dev/null || true)"
+    if [ "$executable_path" = "$DOCKER_BIN_DIR/containerd" ]; then
+      echo "containerd 仍在运行（PID ${process_dir##*/}），不能覆盖 $DOCKER_BIN_DIR/containerd。请先停止其所属服务。" >&2
+      return 1
+    fi
+  done
+}
+
+backup_docker_binaries() {
+  local source_dir="$1"
+  local backup_dir="$DOCKER_BACKUP_DIR/$(date '+%Y%m%d%H%M%S')"
+  local source_file target_file
+  local backed_up=false
+
+  for source_file in "$source_dir"/*; do
+    [ -f "$source_file" ] || continue
+    target_file="$DOCKER_BIN_DIR/$(basename "$source_file")"
+    if [ -e "$target_file" ]; then
+      if [ "$backed_up" = false ]; then
+        $SUDO mkdir -p "$backup_dir"
+        backed_up=true
+      fi
+      $SUDO cp -a "$target_file" "$backup_dir/"
+    fi
+  done
+
+  if [ "$backed_up" = true ]; then
+    log "已备份现有 Docker 二进制：$backup_dir"
+  fi
+}
+
+copy_file_atomically() {
+  local source_file="$1"
+  local target_file="$2"
+  local temp_file="${target_file}.rd300-install-$$"
+
+  $SUDO cp "$source_file" "$temp_file"
+  $SUDO chmod 0755 "$temp_file"
+  $SUDO mv -f "$temp_file" "$target_file"
+}
+
+install_docker_binaries() {
+  local source_dir="$1"
+  local source_file
+  for source_file in "$source_dir"/*; do
+    [ -f "$source_file" ] || continue
+    copy_file_atomically "$source_file" "$DOCKER_BIN_DIR/$(basename "$source_file")"
+  done
 }
 
 install_docker_engine() {
@@ -123,12 +237,23 @@ install_docker_engine() {
   tar -xzf "$archive_path" -C "$tmp_dir"
   if [ ! -d "$tmp_dir/docker" ]; then
     echo "Docker 离线包结构不符合预期，未找到 docker/ 目录: $archive_path" >&2
-    exit 1
+    rm -rf "$tmp_dir"
+    return 1
   fi
 
   $SUDO mkdir -p "$DOCKER_BIN_DIR"
-  $SUDO cp "$tmp_dir"/docker/* "$DOCKER_BIN_DIR"/
-  $SUDO chmod 0755 "$DOCKER_BIN_DIR"/docker "$DOCKER_BIN_DIR"/dockerd "$DOCKER_BIN_DIR"/containerd "$DOCKER_BIN_DIR"/runc 2>/dev/null || true
+  if docker_binaries_match "$tmp_dir/docker"; then
+    log "Docker Engine 二进制已与离线包一致，跳过覆盖"
+  else
+    stop_docker_services
+    ensure_containerd_not_in_use
+    backup_docker_binaries "$tmp_dir/docker"
+    if ! install_docker_binaries "$tmp_dir/docker"; then
+      echo "Docker 二进制更新失败。旧版本已备份至 $DOCKER_BACKUP_DIR，可使用 ROLLBACK_DOCKER=1 恢复。" >&2
+      rm -rf "$tmp_dir"
+      return 1
+    fi
+  fi
 
   if ! group_exists docker; then
     $SUDO groupadd docker
@@ -138,7 +263,6 @@ install_docker_engine() {
     $SUDO usermod -aG docker "$TECH_USER" 2>/dev/null || true
   fi
 
-  install_docker_systemd_units
   "$DOCKER_BIN_DIR/docker" --version
   rm -rf "$tmp_dir"
 }
@@ -150,11 +274,50 @@ install_docker_compose() {
   require_file "$compose_path" "Docker Compose 离线二进制"
 
   $SUDO mkdir -p "$DOCKER_COMPOSE_PLUGIN_DIR" "$INSTALL_PREFIX/bin"
-  $SUDO cp "$compose_path" "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose"
-  $SUDO chmod 0755 "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose"
+  if [ -f "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose" ] && cmp -s "$compose_path" "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose"; then
+    log "Docker Compose 已与离线包一致，跳过覆盖"
+  else
+    copy_file_atomically "$compose_path" "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose"
+  fi
   $SUDO ln -sfn "$DOCKER_COMPOSE_PLUGIN_DIR/docker-compose" "$INSTALL_PREFIX/bin/docker-compose"
 
   "$DOCKER_BIN_DIR/docker" compose version || "$INSTALL_PREFIX/bin/docker-compose" version
+}
+
+rollback_docker_engine() {
+  if [ ! -d "$DOCKER_BACKUP_DIR" ]; then
+    echo "未找到 Docker 二进制备份目录：$DOCKER_BACKUP_DIR" >&2
+    exit 1
+  fi
+
+  local backup_dir
+  backup_dir="$(ls -dt "$DOCKER_BACKUP_DIR"/*/ 2>/dev/null | head -n 1 || true)"
+  if [ -z "$backup_dir" ]; then
+    echo "未找到可用于回滚的 Docker 二进制备份。" >&2
+    exit 1
+  fi
+
+  log "回滚 Docker 二进制：$backup_dir"
+  stop_docker_services
+  ensure_containerd_not_in_use
+  $SUDO mkdir -p "$DOCKER_BIN_DIR"
+
+  local backup_file
+  for backup_file in "$backup_dir"/*; do
+    [ -f "$backup_file" ] || continue
+    copy_file_atomically "$backup_file" "$DOCKER_BIN_DIR/$(basename "$backup_file")"
+  done
+}
+
+create_docker_network() {
+  log "创建 Docker 网络: $DOCKER_NETWORK_NAME"
+
+  if $SUDO "$DOCKER_BIN_DIR/docker" network inspect "$DOCKER_NETWORK_NAME" >/dev/null 2>&1; then
+    echo "Docker 网络 $DOCKER_NETWORK_NAME 已存在，跳过创建。"
+    return
+  fi
+
+  $SUDO "$DOCKER_BIN_DIR/docker" network create --driver bridge "$DOCKER_NETWORK_NAME"
 }
 
 install_docker_systemd_units() {
@@ -226,15 +389,23 @@ main() {
 
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   PKG_DIR="$(resolve_path "$PKG_DIR")"
+  IPTABLES_DEB_DIR="$(resolve_path "$IPTABLES_DEB_DIR")"
 
-  local git_archive_path="$PKG_DIR/$GIT_ARCHIVE"
+  if [ "$ROLLBACK_DOCKER" = "1" ]; then
+    rollback_docker_engine
+    install_docker_systemd_units
+    exit 0
+  fi
+
   local docker_archive_path="$PKG_DIR/$DOCKER_ARCHIVE"
   local compose_binary_path="$PKG_DIR/$DOCKER_COMPOSE_BINARY"
 
   create_tech_user
-  install_git "$git_archive_path"
+  install_iptables_if_missing
   install_docker_engine "$docker_archive_path"
+  install_docker_systemd_units
   install_docker_compose "$compose_binary_path"
+  create_docker_network
 
   echo
   echo "离线软件安装完成。"
