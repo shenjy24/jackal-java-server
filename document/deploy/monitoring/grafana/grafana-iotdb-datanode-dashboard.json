@@ -1,0 +1,376 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "采集 IoTDB DataNode /metrics 的 Prometheus 数据源",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "1. 可用性与客户端接入",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "process_status 为 IoTDB 自身进程存活状态；up 为 Prometheus 抓取状态。两者任一为 0 都应告警。",
+      "fieldConfig": { "defaults": { "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        { "expr": "min(process_status{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "IoTDB 进程" },
+        { "expr": "min(up{job=~\"$job\"})", "legendFormat": "Prometheus 抓取" }
+      ],
+      "title": "存活状态（1=正常）",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 9, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, name) (thrift_connections{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "Node-{{nodeId}} {{name}} 连接" },
+        { "expr": "sum by (nodeId) (thrift_active_threads{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "Node-{{nodeId}} RPC 活跃线程" }
+      ],
+      "title": "RPC 连接与活跃线程",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 9, "x": 15, "y": 1 },
+      "id": 3,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId) (process_threads_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "Node-{{nodeId}} 进程线程" },
+        { "expr": "sum by (nodeId, state) (jvm_threads_states_threads{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",state=~\"blocked|runnable\"})", "legendFormat": "Node-{{nodeId}} JVM {{state}}" }
+      ],
+      "title": "进程与 JVM 线程",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 200,
+      "panels": [],
+      "title": "2. 业务读写吞吐与延迟",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 7 },
+      "id": 4,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, name) (rate(entry_seconds_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*insert.*\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{name}} 写入" },
+        { "expr": "sum by (nodeId, name) (rate(entry_seconds_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*query.*\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{name}} 查询" }
+      ],
+      "title": "接口吞吐（请求/秒）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "IoTDB 的 entry_seconds 是 Summary；此处使用 sum/count 计算滚动平均值。",
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 7 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, name) (rate(entry_seconds_sum{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*insert.*\"}[$__rate_interval])) / sum by (nodeId, name) (rate(entry_seconds_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*insert.*\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{name}} 写入平均" },
+        { "expr": "sum by (nodeId, name) (rate(entry_seconds_sum{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*query.*\"}[$__rate_interval])) / sum by (nodeId, name) (rate(entry_seconds_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"(?i).*query.*\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{name}} 查询平均" }
+      ],
+      "title": "接口滚动平均延迟",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "使用 DataNode 实际暴露的性能概览 Summary 分位数，优先观察 insertTablet 的 p99。",
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.1 }, { "color": "red", "value": 1 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 14 },
+      "id": 6,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "max by (nodeId, interface, type) (performance_overview_seconds{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",interface=~\"insertTablet|insert.*\",quantile=\"0.99\"})", "legendFormat": "Node-{{nodeId}} {{interface}} {{type}} p99" }
+      ],
+      "title": "写入 p99 延迟",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.5 }, { "color": "red", "value": 3 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 14 },
+      "id": 7,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "max by (nodeId, interface, type) (performance_overview_seconds{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",interface=~\"queryLatency|executeQueryStatement\",type=\"QUERY\",quantile=\"0.99\"})", "legendFormat": "Node-{{nodeId}} {{interface}} p99" }
+      ],
+      "title": "查询 p99 延迟",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 300,
+      "panels": [],
+      "title": "3. Flush 与 Compaction",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 22 },
+      "id": 8,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, name, status) (queue{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"flush|compaction_.*\"})", "legendFormat": "Node-{{nodeId}} {{name}} {{status}}" },
+        { "expr": "sum by (nodeId, type) (pending_flush_task{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "Node-{{nodeId}} {{type}}" }
+      ],
+      "title": "Flush / Compaction 排队任务",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 22 },
+      "id": 9,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, stage) (rate(flush_cost_seconds_sum{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval])) / sum by (nodeId, stage) (rate(flush_cost_seconds_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{stage}} 平均" },
+        { "expr": "max by (nodeId, stage) (flush_cost_seconds{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",quantile=\"0.99\"})", "legendFormat": "Node-{{nodeId}} {{stage}} p99" }
+      ],
+      "title": "Flush 耗时",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 29 },
+      "id": 10,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, type) (rate(data_read_total{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{type}} compaction 读" },
+        { "expr": "sum by (nodeId, type) (rate(data_written_total{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{type}} compaction 写" }
+      ],
+      "title": "Compaction 读写吞吐",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 29 },
+      "id": 11,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, type) (rate(flush_memtable_count_total{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{type}}" },
+        { "expr": "sum by (nodeId, name) (compaction_task_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"})", "legendFormat": "Node-{{nodeId}} {{name}}" }
+      ],
+      "title": "Flush 触发率与 Compaction 任务计数",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 },
+      "id": 400,
+      "panels": [],
+      "title": "4. CPU、内存与 GC",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "该 DataNode 的 sys_cpu_load 实际值已是百分比（例如 9.879 表示 9.879%），不再额外乘以 100。",
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 37 },
+      "id": 12,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "process_cpu_load{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}", "legendFormat": "Node-{{nodeId}} 进程 CPU" },
+        { "expr": "sys_cpu_load{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}", "legendFormat": "Node-{{nodeId}} 系统 CPU" }
+      ],
+      "title": "CPU 负载",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 75 }, { "color": "red", "value": 90 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 37 },
+      "id": 13,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId) (jvm_memory_used_bytes{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",area=\"heap\"}) / sum by (nodeId) (jvm_memory_max_bytes{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",area=\"heap\"}) * 100", "legendFormat": "Node-{{nodeId}} JVM 堆" },
+        { "expr": "linux_memory_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=\"Used\"} / (linux_memory_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=\"Used\"} + linux_memory_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=\"Available\"}) * 100", "legendFormat": "Node-{{nodeId}} Linux 内存" }
+      ],
+      "title": "JVM 堆与 Linux 内存使用率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 37 },
+      "id": 14,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "jvm_buffer_memory_used_bytes{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",id=\"direct\"}", "legendFormat": "Node-{{nodeId}} Direct 已用" },
+        { "expr": "jvm_buffer_total_capacity_bytes{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",id=\"direct\"}", "legendFormat": "Node-{{nodeId}} Direct 容量" },
+        { "expr": "jvm_memory_used_bytes{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",id=\"Metaspace\"}", "legendFormat": "Node-{{nodeId}} Metaspace" }
+      ],
+      "title": "直接内存与 Metaspace",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 2 }, { "color": "red", "value": 5 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 44 },
+      "id": 15,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval])) * 100", "legendFormat": "Node-{{nodeId}} GC 停顿占比" }
+      ],
+      "title": "GC 造成的停顿占比",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 51 },
+      "id": 500,
+      "panels": [],
+      "title": "5. 磁盘、TsFile、WAL 与缓存",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 80 }, { "color": "red", "value": 90 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 52 },
+      "id": 16,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "(1 - sys_disk_available_space{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"} / sys_disk_total_space{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}) * 100", "legendFormat": "Node-{{nodeId}} 系统盘已用" },
+        { "expr": "disk_io_busy_percentage{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"} * 100", "legendFormat": "Node-{{nodeId}} {{disk_id}} 忙碌度" }
+      ],
+      "title": "磁盘已用率与忙碌度",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 52 },
+      "id": 17,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "disk_io_avg_queue_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}", "legendFormat": "Node-{{nodeId}} {{disk_id}} IO 队列" },
+        { "expr": "disk_io_avg_time{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}", "legendFormat": "Node-{{nodeId}} {{disk_id}} {{type}} 平均耗时" }
+      ],
+      "title": "磁盘 IO 队列与平均耗时",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 52 },
+      "id": 18,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, database, name) (file_global_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"seq|unseq\"})", "legendFormat": "Node-{{nodeId}} {{database}} {{name}}" },
+        { "expr": "sum by (nodeId) (file_size{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=\"wal\"})", "legendFormat": "Node-{{nodeId}} WAL" }
+      ],
+      "title": "TsFile 与 WAL 大小",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 59 },
+      "id": 19,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, database, name) (file_global_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"seq|unseq\"})", "legendFormat": "Node-{{nodeId}} {{database}} {{name}} 文件数" },
+        { "expr": "sum by (nodeId, name) (file_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",name=~\"wal|seq|unseq\"})", "legendFormat": "Node-{{nodeId}} {{name}}" }
+      ],
+      "title": "TsFile 与 WAL 文件数",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "orange", "value": 50 }, { "color": "green", "value": 80 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 59 },
+      "id": 20,
+      "options": { "legend": { "calcs": ["last", "min"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "cache_hit{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}", "legendFormat": "Node-{{nodeId}} {{name}} 命中率" }
+      ],
+      "title": "查询缓存命中率",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 66 },
+      "id": 600,
+      "panels": [],
+      "title": "6. 错误与线程池积压",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 0.01 }, { "color": "red", "value": 0.1 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 67 },
+      "id": 21,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, level) (rate(logback_events_total{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",level=~\"warn|error\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} {{level}} /s" },
+        { "expr": "sum by (nodeId) (rate(SchemaRegionratisservernumFailedClientWriteOnServer_total{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\"}[$__rate_interval]))", "legendFormat": "Node-{{nodeId}} Ratis 写失败 /s" }
+      ],
+      "title": "错误日志与 Ratis 写失败率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "fillOpacity": 12, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 10 }] } }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 67 },
+      "id": 22,
+      "options": { "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (nodeId, pool_name) (thread_pool_waiting_task_count{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\",nodeId=~\"$nodeId\",pool_name=~\".*(Flush|Compaction|ClientRPC|WAL).*\"})", "legendFormat": "Node-{{nodeId}} {{pool_name}}" }
+      ],
+      "title": "关键线程池等待任务",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["iotdb", "datanode", "prometheus", "performance"],
+  "templating": {
+    "list": [
+      { "current": {}, "hide": 0, "includeAll": true, "label": "Prometheus Job", "multi": true, "name": "job", "options": [], "query": "label_values(process_status, job)", "refresh": 1, "type": "query" },
+      { "current": {}, "hide": 0, "includeAll": true, "label": "集群", "multi": true, "name": "cluster", "options": [], "query": "label_values(process_status{job=~\"$job\",nodeType=\"DATANODE\"}, cluster)", "refresh": 1, "type": "query" },
+      { "current": {}, "hide": 0, "includeAll": true, "label": "DataNode", "multi": true, "name": "nodeId", "options": [], "query": "label_values(process_status{job=~\"$job\",cluster=~\"$cluster\",nodeType=\"DATANODE\"}, nodeId)", "refresh": 1, "type": "query" }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "IoTDB DataNode 性能与容量监控",
+  "uid": "iotdb-datanode-overview",
+  "version": 1
+}
